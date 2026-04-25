@@ -308,6 +308,8 @@ export class PlayerService {
   }
 
   private async loadTrackById(trackId: string, autoplay: boolean): Promise<boolean> {
+    await this.ensureStarted();
+    if (this.state.status === "error") return false;
     const virtual = this.cdTracksById.get(trackId);
     const row = virtual
       ? { path: virtual.path }

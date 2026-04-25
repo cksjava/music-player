@@ -21,8 +21,10 @@ import { AddToPlaylistDialog } from "../components/AddToPlaylistDialog";
 import { formatMs } from "../lib/format";
 import { cn } from "../lib/cn";
 import { usePlayerActions, usePlayerState } from "../hooks/usePlayer";
+import { useToast } from "../context/ToastContext";
 
 export function NowPage(): ReactElement {
+  const toast = useToast();
   const { data, isLoading } = usePlayerState();
   const actions = usePlayerActions();
   const state = data?.state;
@@ -51,6 +53,7 @@ export function NowPage(): ReactElement {
   const dur = state?.durationMs ?? current?.durationMs ?? 0;
 
   const playing = state?.status === "playing";
+  const trackIdForPlaylist = state?.trackId ?? current?.id ?? null;
 
   const cycleRepeat = useCallback(() => {
     const r = state?.repeat ?? "off";
@@ -99,6 +102,20 @@ export function NowPage(): ReactElement {
   return (
     <div className="mx-auto flex max-w-lg flex-col px-4 pb-4 sm:px-6">
       <div className="pointer-events-none fixed inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-[70] mx-auto flex w-full max-w-lg justify-end gap-2 px-4 sm:px-6">
+        <button
+          type="button"
+          onClick={() => {
+            if (!trackIdForPlaylist) {
+              toast("Play a track first, then add it to a playlist.", "info");
+              return;
+            }
+            setShowAddToPlaylist(true);
+          }}
+          className="pointer-events-auto inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-zinc-900/80 px-2.5 py-2 text-zinc-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:border-fuchsia-500/30 hover:text-white"
+          aria-label="Add current track to playlist"
+        >
+          <MusicNotesPlus size={20} className="text-fuchsia-300" weight="bold" />
+        </button>
         <button
           type="button"
           onClick={() => setShowVolume(true)}
@@ -248,17 +265,6 @@ export function NowPage(): ReactElement {
           {repeatIcon}
         </button>
       </div>
-      <div className="mb-5 flex justify-center">
-        <button
-          type="button"
-          onClick={() => setShowAddToPlaylist(true)}
-          disabled={!current?.id}
-          className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-zinc-900/70 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-violet-500/40 hover:text-white disabled:opacity-40"
-        >
-          <MusicNotesPlus size={18} className="text-violet-300" />
-          Add current track to playlist
-        </button>
-      </div>
 
       {showQueue ? (
         <div
@@ -319,7 +325,7 @@ export function NowPage(): ReactElement {
 
       <AddToPlaylistDialog
         open={showAddToPlaylist}
-        trackId={current?.id ?? null}
+        trackId={trackIdForPlaylist}
         trackTitle={current?.title}
         onClose={() => setShowAddToPlaylist(false)}
       />

@@ -6,9 +6,11 @@ import { MiniPlayer } from "./MiniPlayer";
 
 export function AppShell(): ReactElement {
   const { pathname } = useLocation();
+  /* /now has no mini-player but still needs enough space for the fixed bottom nav
+     (nav row + safe area is often >4rem, otherwise controls sit under the bar). */
   const mainPb =
     pathname === "/now"
-      ? "pb-[calc(4rem+max(env(safe-area-inset-bottom),0px))]"
+      ? "pb-[calc(7rem+max(env(safe-area-inset-bottom),0px))]"
       : "pb-[calc(10.5rem+max(env(safe-area-inset-bottom),0px))]";
 
   return (
