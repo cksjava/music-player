@@ -20,7 +20,7 @@ export function AlbumPage(): ReactElement {
     enabled: Boolean(id),
   });
   const { data: playerData } = usePlayerState();
-  const { setQueue, play, appendQueue } = usePlayerActions();
+  const { setQueue, play } = usePlayerActions();
 
   useEffect(() => {
     if (error) toast((error as Error).message);
@@ -150,11 +150,6 @@ export function AlbumPage(): ReactElement {
                   showActions
                   active={playerData?.state.trackId === t.id}
                   onPlay={() => void playTrack(t.id)}
-                  onQueue={() =>
-                    void appendQueue([t.id])
-                      .then(() => toast("Added to queue", "info"))
-                      .catch((e) => toast((e as Error).message))
-                  }
                   onAddToPlaylist={() => setPlaylistTrack({ id: t.id, title: t.title })}
                 />
               </li>

@@ -18,7 +18,7 @@ export function ArtistPage(): ReactElement {
     enabled: Boolean(id),
   });
   const { data: playerData } = usePlayerState();
-  const { setQueue, appendQueue } = usePlayerActions();
+  const { setQueue } = usePlayerActions();
 
   useEffect(() => {
     if (error) toast((error as Error).message);
@@ -96,11 +96,6 @@ export function ArtistPage(): ReactElement {
                     toast((e as Error).message);
                   }
                 })()
-              }
-              onQueue={() =>
-                void appendQueue([t.id])
-                  .then(() => toast("Added to queue", "info"))
-                  .catch((e) => toast((e as Error).message))
               }
             />
           </li>

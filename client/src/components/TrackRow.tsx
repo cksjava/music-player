@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { ListPlus, MusicNotesPlus, Trash } from "@phosphor-icons/react";
+import { MusicNotesPlus, Play, Trash } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 import { formatMs } from "../lib/format";
 import type { Track } from "../types";
@@ -11,7 +11,6 @@ export function TrackRow(props: {
   showAlbum?: boolean;
   showActions?: boolean;
   onPlay: () => void;
-  onQueue?: () => void;
   onAddToPlaylist?: () => void;
   onRemove?: () => void;
   className?: string;
@@ -23,7 +22,6 @@ export function TrackRow(props: {
     showAlbum = true,
     showActions = true,
     onPlay,
-    onQueue,
     onAddToPlaylist,
     onRemove,
     className,
@@ -44,11 +42,7 @@ export function TrackRow(props: {
           {track.trackNumber ?? index + 1}
         </span>
       ) : null}
-      <button
-        type="button"
-        onClick={onPlay}
-        className="flex min-w-0 flex-1 flex-col items-start text-left"
-      >
+      <div className="flex min-w-0 flex-1 flex-col items-start text-left">
         <span className="flex w-full items-center gap-3">
           <span className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-100">
             {track.title}
@@ -60,7 +54,7 @@ export function TrackRow(props: {
         <span className="block w-full truncate text-xs text-zinc-500">
           {subtitle || " "}
         </span>
-      </button>
+      </div>
       {showActions ? (
       <div className="flex shrink-0 items-center gap-0.5">
         {onRemove ? (
@@ -76,19 +70,6 @@ export function TrackRow(props: {
             <Trash size={20} />
           </button>
         ) : null}
-        {onQueue ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQueue();
-            }}
-            className="rounded-lg p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
-            aria-label="Add to queue"
-          >
-            <ListPlus size={22} />
-          </button>
-        ) : null}
         {onAddToPlaylist ? (
           <button
             type="button"
@@ -102,6 +83,17 @@ export function TrackRow(props: {
             <MusicNotesPlus size={21} />
           </button>
         ) : null}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlay();
+          }}
+          className="rounded-lg p-2 text-violet-400 hover:bg-violet-500/15"
+          aria-label="Play"
+        >
+          <Play size={22} weight="fill" />
+        </button>
       </div>
       ) : null}
     </div>

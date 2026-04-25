@@ -38,7 +38,7 @@ export function PlaylistPage(): ReactElement {
   }, [data?.playlist]);
 
   const { data: playerData } = usePlayerState();
-  const { setQueue, appendQueue } = usePlayerActions();
+  const { setQueue } = usePlayerActions();
 
   const rename = useMutation({
     mutationFn: () => musicApi.patchPlaylist(id, name.trim()),
@@ -156,11 +156,6 @@ export function PlaylistPage(): ReactElement {
                     toast((e as Error).message);
                   }
                 })()
-              }
-              onQueue={() =>
-                void appendQueue([t.id])
-                  .then(() => toast("Added to queue", "info"))
-                  .catch((e) => toast((e as Error).message))
               }
               onRemove={() => removeTrack.mutate(t.id)}
             />
