@@ -824,7 +824,18 @@ export function registerRoutes(
         updateJob.step = "stop-playback";
         pushErrorLog("system", "update step started: stop-playback", "Stopping playback before update");
         await player.stop();
-        await runStep("sudo-check", "sudo", ["-n", "true"]);
+        let canRestartService = false;
+        try {
+          await runStep("sudo-check", "sudo", ["-n", "true"]);
+          canRestartService = true;
+        } catch {
+          // Keep updating even without passwordless sudo; user can restart manually.
+          pushErrorLog(
+            "system",
+            "update step warning: sudo-check",
+            "Passwordless sudo is not configured. The update will continue, but service restart will require manual action."
+          );
+        }
         const before = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
         updateJob.beforeCommit = before.stdout.trim();
         await runStep("git-pull", "git", ["pull", "--ff-only"]);
@@ -834,9 +845,18 @@ export function registerRoutes(
         await runStep("npm-build", "npm", ["run", "build"]);
         const after = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
         updateJob.afterCommit = after.stdout.trim();
-        updateJob.step = "restart-service";
-        pushErrorLog("system", "update completed", "Restarting music-player.service");
-        await execFileAsync("sudo", ["-n", "systemctl", "restart", "music-player.service"]);
+        if (canRestartService) {
+          updateJob.step = "restart-service";
+          pushErrorLog("system", "update completed", "Restarting music-player.service");
+          await execFileAsync("sudo", ["-n", "systemctl", "restart", "music-player.service"]);
+        } else {
+          updateJob.step = "done";
+          updateJob.status = "ok";
+          updateJob.finishedAt = Date.now();
+          updateJob.message =
+            "Update completed. Restart the app manually (sudo systemctl restart music-player.service).";
+          return;
+        }
         updateJob.status = "ok";
         updateJob.finishedAt = Date.now();
         updateJob.step = "done";
