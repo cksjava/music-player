@@ -7,6 +7,7 @@ import {
   FolderOpen,
   HardDrives,
   CaretUp,
+  Power,
   PauseCircle,
   Plus,
   SpeakerHigh,
@@ -150,6 +151,30 @@ export function SettingsPage(): ReactElement {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["error-logs"] });
       toast("Error logs cleared", "info");
+    },
+    onError: (err: Error) => toast(err.message),
+  });
+
+  const shutdownDevice = useMutation({
+    mutationFn: () => musicApi.shutdownDevice(),
+    onSuccess: () => {
+      toast("Shutdown requested. The Raspberry Pi will power off shortly.", "info");
+    },
+    onError: (err: Error) => toast(err.message),
+  });
+
+  const restartApp = useMutation({
+    mutationFn: () => musicApi.restartApp(),
+    onSuccess: () => {
+      toast("App restart requested. Wait a few seconds and refresh.", "info");
+    },
+    onError: (err: Error) => toast(err.message),
+  });
+
+  const updateApp = useMutation({
+    mutationFn: () => musicApi.updateApp(),
+    onSuccess: () => {
+      toast("Update requested (git pull + restart). Wait and refresh.", "info");
     },
     onError: (err: Error) => toast(err.message),
   });
@@ -343,6 +368,36 @@ export function SettingsPage(): ReactElement {
             <WarningCircle size={22} className="text-rose-300" />
             <span className="font-semibold">Show error logs</span>
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Restart the app service now?")) {
+                restartApp.mutate();
+              }
+            }}
+            disabled={restartApp.isPending}
+            className="flex w-full items-center gap-3 rounded-xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-left text-sm text-sky-100 transition hover:bg-sky-500/15 disabled:opacity-50"
+          >
+            <ArrowsClockwise size={20} className="text-sky-300" />
+            <span className="font-semibold">Restart app</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                confirm(
+                  "Update app from git (pull --ff-only) and restart service now?"
+                )
+              ) {
+                updateApp.mutate();
+              }
+            }}
+            disabled={updateApp.isPending}
+            className="flex w-full items-center gap-3 rounded-xl border border-indigo-500/25 bg-indigo-500/10 px-4 py-3 text-left text-sm text-indigo-100 transition hover:bg-indigo-500/15 disabled:opacity-50"
+          >
+            <ArrowsClockwise size={20} className="text-indigo-300" />
+            <span className="font-semibold">Update app (git pull + restart)</span>
+          </button>
 
           <button
             type="button"
@@ -355,6 +410,23 @@ export function SettingsPage(): ReactElement {
           >
             <Broom size={20} className="text-amber-300" />
             <span className="font-semibold">Clean library (keep source folders)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                confirm(
+                  "Shut down this Raspberry Pi now? You will need to power it on manually."
+                )
+              ) {
+                shutdownDevice.mutate();
+              }
+            }}
+            disabled={shutdownDevice.isPending}
+            className="flex w-full items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-left text-sm text-red-100 transition hover:bg-red-500/15 disabled:opacity-50"
+          >
+            <Power size={20} className="text-red-300" />
+            <span className="font-semibold">Shut down device</span>
           </button>
         </div>
       </section>

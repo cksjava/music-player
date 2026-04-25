@@ -237,6 +237,21 @@ export const musicApi = {
       { method: "POST", body: JSON.stringify(body ?? {}) }
     ),
 
+  shutdownDevice: () =>
+    api<{ ok: boolean; message: string }>("/api/admin/system/shutdown", {
+      method: "POST",
+    }),
+
+  restartApp: () =>
+    api<{ ok: boolean; message: string }>("/api/admin/system/restart-app", {
+      method: "POST",
+    }),
+
+  updateApp: () =>
+    api<{ ok: boolean; message: string }>("/api/admin/system/update-app", {
+      method: "POST",
+    }),
+
   playlists: () => api<{ playlists: Playlist[] }>("/api/playlists"),
 
   createPlaylist: (name: string) =>

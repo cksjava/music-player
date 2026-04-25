@@ -1,8 +1,10 @@
 import type { Express, Request, Response } from "express";
 import type Database from "better-sqlite3";
+import { execFile } from "node:child_process";
 import { readdir } from "node:fs/promises";
 import { unlink } from "node:fs/promises";
 import { dirname, join, normalize, resolve } from "node:path";
+import { promisify } from "node:util";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { scanSource } from "./services/indexer.js";
@@ -17,6 +19,7 @@ export function registerRoutes(
   db: Database.Database,
   player: PlayerService
 ): void {
+  const execFileAsync = promisify(execFile);
   const dataDir = process.env.DATA_DIR ?? join(process.cwd(), "server", "data");
   const artworkDir = join(dataDir, "artwork");
   type ScanJobStatus = "queued" | "running" | "done" | "error";
@@ -721,6 +724,44 @@ export function registerRoutes(
       keepSources: true,
       playbackStopped: body.data.stopPlayback,
     });
+  });
+
+  app.post("/api/admin/system/shutdown", async (_req, res) => {
+    res.status(202).json({ ok: true, message: "Shutdown requested" });
+    // Execute after response is sent so the client receives acknowledgement.
+    setTimeout(async () => {
+      try {
+        await execFileAsync("sudo", ["shutdown", "-h", "now"]);
+      } catch (e) {
+        const msg = (e as Error).message;
+        pushErrorLog("system", "device shutdown failed", msg);
+      }
+    }, 250);
+  });
+
+  app.post("/api/admin/system/restart-app", async (_req, res) => {
+    res.status(202).json({ ok: true, message: "App restart requested" });
+    setTimeout(async () => {
+      try {
+        await execFileAsync("sudo", ["systemctl", "restart", "music-player.service"]);
+      } catch (e) {
+        const msg = (e as Error).message;
+        pushErrorLog("system", "app restart failed", msg);
+      }
+    }, 250);
+  });
+
+  app.post("/api/admin/system/update-app", async (_req, res) => {
+    res.status(202).json({ ok: true, message: "App update requested" });
+    setTimeout(async () => {
+      try {
+        await execFileAsync("git", ["pull", "--ff-only"], { cwd: process.cwd() });
+        await execFileAsync("sudo", ["systemctl", "restart", "music-player.service"]);
+      } catch (e) {
+        const msg = (e as Error).message;
+        pushErrorLog("system", "app update failed", msg);
+      }
+    }, 250);
   });
 
   app.get("/api/playlists", (_req, res) => {
