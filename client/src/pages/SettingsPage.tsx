@@ -56,6 +56,7 @@ function getFriendlyUpdateProgress(
     "toolcheck-tsc": 3,
     "npm-build": 4,
     "restart-service": 5,
+    "manual-restart-required": 5,
     done: 5,
   };
   const current = Math.min(
@@ -239,6 +240,7 @@ export function SettingsPage(): ReactElement {
   const updateStatus = updateStatusQ.data?.update;
   const updateProgress = getFriendlyUpdateProgress(updateStatus);
   const updatePercent = Math.round((updateProgress.current / UPDATE_TOTAL_STEPS) * 100);
+  const isUpdateIdle = !updateStatus || updateStatus.status === "idle";
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6">
@@ -469,25 +471,31 @@ export function SettingsPage(): ReactElement {
           <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-xs text-indigo-100/90">
             <div className="mb-2 flex items-center justify-between gap-3">
               <p className="font-semibold">{updateProgress.label}</p>
-              <p className="font-mono text-[11px] text-zinc-300">
-                Step {updateProgress.current}/{UPDATE_TOTAL_STEPS}
-              </p>
+              {!isUpdateIdle ? (
+                <p className="font-mono text-[11px] text-zinc-300">
+                  Step {updateProgress.current}/{UPDATE_TOTAL_STEPS}
+                </p>
+              ) : null}
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800/80">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  updateStatus?.status === "error" ? "bg-rose-400" : "bg-indigo-400"
-                )}
-                style={{ width: `${updatePercent}%` }}
-              />
-            </div>
-            <p className="mt-2 text-[11px] text-zinc-300">
-              {updateStatus?.status === "error"
-                ? "Could not finish update. Open error logs for details."
-                : updateStatus?.status === "ok"
-                  ? "App is up to date."
-                  : "Update may take up to a minute on Raspberry Pi."}
+            {!isUpdateIdle ? (
+              <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800/80">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    updateStatus?.status === "error" ? "bg-rose-400" : "bg-indigo-400"
+                  )}
+                  style={{ width: `${updatePercent}%` }}
+                />
+              </div>
+            ) : null}
+            <p className={cn("mt-2 text-[11px]", isUpdateIdle ? "text-zinc-500" : "text-zinc-300")}>
+              {isUpdateIdle
+                ? "Click Update app to fetch latest changes and rebuild."
+                : updateStatus?.status === "error"
+                  ? "Could not finish update. Open error logs for details."
+                  : updateStatus?.status === "ok"
+                    ? (updateStatus?.message ?? "App is up to date.")
+                    : "Update may take up to a minute on Raspberry Pi."}
             </p>
             {(updateStatus?.beforeCommit || updateStatus?.afterCommit) && (
               <p className="mt-1 font-mono text-[10px] text-zinc-400">

@@ -850,7 +850,7 @@ export function registerRoutes(
           pushErrorLog("system", "update completed", "Restarting music-player.service");
           await execFileAsync("sudo", ["-n", "systemctl", "restart", "music-player.service"]);
         } else {
-          updateJob.step = "done";
+          updateJob.step = "manual-restart-required";
           updateJob.status = "ok";
           updateJob.finishedAt = Date.now();
           updateJob.message =
