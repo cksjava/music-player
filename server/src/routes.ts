@@ -682,7 +682,6 @@ export function registerRoutes(
 
   app.post("/api/admin/library/reset", async (req, res) => {
     const schema = z.object({
-      keepSources: z.boolean().optional().default(true),
       stopPlayback: z.boolean().optional().default(true),
     });
     const body = schema.safeParse(req.body ?? {});
@@ -713,17 +712,13 @@ export function registerRoutes(
       db.prepare(`DELETE FROM tracks`).run();
       db.prepare(`DELETE FROM albums`).run();
       db.prepare(`DELETE FROM artists`).run();
-      if (body.data.keepSources) {
-        db.prepare(`UPDATE sources SET last_scan_at = NULL`).run();
-      } else {
-        db.prepare(`DELETE FROM sources`).run();
-      }
+      db.prepare(`UPDATE sources SET last_scan_at = NULL`).run();
     });
     tx();
 
     res.json({
       ok: true,
-      keepSources: body.data.keepSources,
+      keepSources: true,
       playbackStopped: body.data.stopPlayback,
     });
   });

@@ -136,16 +136,11 @@ export function SettingsPage(): ReactElement {
   const currentDev = playerData?.state.audioDevice ?? "";
 
   const resetLibrary = useMutation({
-    mutationFn: (keepSources: boolean) =>
-      musicApi.resetLibrary({ keepSources, stopPlayback: true }),
-    onSuccess: async (result) => {
+    mutationFn: () =>
+      musicApi.resetLibrary({ stopPlayback: true }),
+    onSuccess: async () => {
       await qc.invalidateQueries();
-      toast(
-        result.keepSources
-          ? "Library cleared. Sources kept for quick re-scan."
-          : "Library and sources fully cleared.",
-        "info"
-      );
+      toast("Library cleared. Sources kept for quick re-scan.", "info");
     },
     onError: (err: Error) => toast(err.message),
   });
@@ -353,30 +348,13 @@ export function SettingsPage(): ReactElement {
             type="button"
             onClick={() => {
               if (confirm("Clear indexed tracks/albums/artists/playlists and keep sources?")) {
-                resetLibrary.mutate(true);
+                resetLibrary.mutate();
               }
             }}
             className="flex w-full items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-left text-sm text-amber-100 transition hover:bg-amber-500/15"
           >
             <Broom size={20} className="text-amber-300" />
             <span className="font-semibold">Clean library (keep source folders)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (
-                confirm(
-                  "Fully reset database? This removes source folders too. You will need to add them again."
-                )
-              ) {
-                resetLibrary.mutate(false);
-              }
-            }}
-            className="flex w-full items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-left text-sm text-red-100 transition hover:bg-red-500/15"
-          >
-            <Trash size={20} className="text-red-300" />
-            <span className="font-semibold">Factory reset library + sources</span>
           </button>
         </div>
       </section>
