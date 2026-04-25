@@ -151,7 +151,9 @@ export function AlbumPage(): ReactElement {
                   active={playerData?.state.trackId === t.id}
                   onPlay={() => void playTrack(t.id)}
                   onQueue={() =>
-                    void appendQueue([t.id]).catch((e) => toast((e as Error).message))
+                    void appendQueue([t.id])
+                      .then(() => toast("Added to queue", "info"))
+                      .catch((e) => toast((e as Error).message))
                   }
                   onAddToPlaylist={() => setPlaylistTrack({ id: t.id, title: t.title })}
                 />

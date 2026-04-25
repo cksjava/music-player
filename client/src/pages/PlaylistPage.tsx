@@ -158,7 +158,9 @@ export function PlaylistPage(): ReactElement {
                 })()
               }
               onQueue={() =>
-                void appendQueue([t.id]).catch((e) => toast((e as Error).message))
+                void appendQueue([t.id])
+                  .then(() => toast("Added to queue", "info"))
+                  .catch((e) => toast((e as Error).message))
               }
               onRemove={() => removeTrack.mutate(t.id)}
             />

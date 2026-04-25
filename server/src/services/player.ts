@@ -348,6 +348,9 @@ export class PlayerService {
     }
     this.state.trackId = trackId;
     this.state.status = "loading";
+    // Reset stale timeline immediately so UI doesn't stay at previous track end during transitions.
+    this.state.positionMs = 0;
+    this.state.durationMs = null;
     try {
       await this.mpv.command("loadfile", row.path, "replace");
       if (!autoplay) await this.mpv.setProp("pause", true);

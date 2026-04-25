@@ -11,7 +11,7 @@ export function usePlayerState(): ReturnType<
     queryKey: playerQueryKey,
     queryFn: () => musicApi.playerState(),
     refetchInterval: (q) =>
-      q.state.data?.state.status === "playing" ? 900 : false,
+      q.state.data?.state.trackId ? 900 : false,
   });
 }
 

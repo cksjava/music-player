@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { ListPlus, MusicNotesPlus, Play, Trash } from "@phosphor-icons/react";
+import { ListPlus, MusicNotesPlus, Trash } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 import { formatMs } from "../lib/format";
 import type { Track } from "../types";
@@ -102,17 +102,6 @@ export function TrackRow(props: {
             <MusicNotesPlus size={21} />
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPlay();
-          }}
-          className="rounded-lg p-2 text-violet-400 hover:bg-violet-500/15"
-          aria-label="Play"
-        >
-          <Play size={22} weight="fill" />
-        </button>
       </div>
       ) : null}
     </div>
