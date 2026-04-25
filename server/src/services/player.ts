@@ -54,6 +54,14 @@ export class PlayerService {
       this.state.error = err.message;
       pushErrorLog("playback", "mpv process error", err.message);
     });
+    this.mpv.on("mpv-stderr", (raw: unknown) => {
+      const line = String(raw ?? "").trim();
+      if (!line) return;
+      // Keep logs useful by recording error-ish mpv stderr lines only.
+      if (/error|failed|alsa|ao\/|device/i.test(line)) {
+        pushErrorLog("playback", "mpv stderr", line);
+      }
+    });
   }
 
   private loadSettings(): void {
