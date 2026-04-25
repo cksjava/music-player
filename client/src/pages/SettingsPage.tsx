@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Broom,
   ArrowsClockwise,
+  DownloadSimple,
   FolderOpen,
   HardDrives,
   CaretUp,
@@ -17,9 +18,18 @@ import {
 } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { usePlayerActions, usePlayerState } from "../hooks/usePlayer";
 import { useToast } from "../context/ToastContext";
 import { cn } from "../lib/cn";
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  tone?: "default" | "danger";
+  action: () => void;
+} | null;
 
 export function SettingsPage(): ReactElement {
   const toast = useToast();
@@ -32,6 +42,7 @@ export function SettingsPage(): ReactElement {
   const [showLogs, setShowLogs] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [pickerPath, setPickerPath] = useState("");
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm>(null);
 
   const sourcesQ = useQuery({
     queryKey: ["sources"],
@@ -327,9 +338,13 @@ export function SettingsPage(): ReactElement {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm("Remove this source and its indexed tracks?")) {
-                      removeSource.mutate(s.id);
-                    }
+                    setPendingConfirm({
+                      title: "Remove source",
+                      message: "Remove this source and its indexed tracks?",
+                      confirmLabel: "Remove",
+                      tone: "danger",
+                      action: () => removeSource.mutate(s.id),
+                    });
                   }}
                   className="inline-flex items-center justify-center rounded-xl border border-red-500/20 p-2 text-red-400 hover:bg-red-500/10"
                   aria-label="Delete source"
@@ -371,9 +386,12 @@ export function SettingsPage(): ReactElement {
           <button
             type="button"
             onClick={() => {
-              if (confirm("Restart the app service now?")) {
-                restartApp.mutate();
-              }
+              setPendingConfirm({
+                title: "Restart app",
+                message: "Restart the music player service now?",
+                confirmLabel: "Restart",
+                action: () => restartApp.mutate(),
+              });
             }}
             disabled={restartApp.isPending}
             className="flex w-full items-center gap-3 rounded-xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-left text-sm text-sky-100 transition hover:bg-sky-500/15 disabled:opacity-50"
@@ -384,43 +402,47 @@ export function SettingsPage(): ReactElement {
           <button
             type="button"
             onClick={() => {
-              if (
-                confirm(
-                  "Update app from git (pull --ff-only) and restart service now?"
-                )
-              ) {
-                updateApp.mutate();
-              }
+              setPendingConfirm({
+                title: "Update app",
+                message:
+                  "Run git pull, install dependencies, build, and restart the service now?",
+                confirmLabel: "Update",
+                action: () => updateApp.mutate(),
+              });
             }}
             disabled={updateApp.isPending}
             className="flex w-full items-center gap-3 rounded-xl border border-indigo-500/25 bg-indigo-500/10 px-4 py-3 text-left text-sm text-indigo-100 transition hover:bg-indigo-500/15 disabled:opacity-50"
           >
-            <ArrowsClockwise size={20} className="text-indigo-300" />
-            <span className="font-semibold">Update app (git pull + restart)</span>
+            <DownloadSimple size={20} className="text-indigo-300" />
+            <span className="font-semibold">Update app</span>
           </button>
 
           <button
             type="button"
             onClick={() => {
-              if (confirm("Clear indexed tracks/albums/artists/playlists and keep sources?")) {
-                resetLibrary.mutate();
-              }
+              setPendingConfirm({
+                title: "Clean library",
+                message: "Clear indexed tracks, albums, artists and playlists while keeping sources?",
+                confirmLabel: "Clean",
+                action: () => resetLibrary.mutate(),
+              });
             }}
             className="flex w-full items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-left text-sm text-amber-100 transition hover:bg-amber-500/15"
           >
             <Broom size={20} className="text-amber-300" />
-            <span className="font-semibold">Clean library (keep source folders)</span>
+            <span className="font-semibold">Clean library</span>
           </button>
           <button
             type="button"
             onClick={() => {
-              if (
-                confirm(
-                  "Shut down this Raspberry Pi now? You will need to power it on manually."
-                )
-              ) {
-                shutdownDevice.mutate();
-              }
+              setPendingConfirm({
+                title: "Shut down device",
+                message:
+                  "Shut down this Raspberry Pi now? You will need to power it on manually.",
+                confirmLabel: "Shut down",
+                tone: "danger",
+                action: () => shutdownDevice.mutate(),
+              });
             }}
             disabled={shutdownDevice.isPending}
             className="flex w-full items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-left text-sm text-red-100 transition hover:bg-red-500/15 disabled:opacity-50"
@@ -588,6 +610,29 @@ export function SettingsPage(): ReactElement {
           </div>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(pendingConfirm)}
+        title={pendingConfirm?.title ?? ""}
+        message={pendingConfirm?.message ?? ""}
+        confirmLabel={pendingConfirm?.confirmLabel ?? "Confirm"}
+        tone={pendingConfirm?.tone ?? "default"}
+        busy={
+          addSource.isPending ||
+          scan.isPending ||
+          toggleSource.isPending ||
+          removeSource.isPending ||
+          resetLibrary.isPending ||
+          shutdownDevice.isPending ||
+          restartApp.isPending ||
+          updateApp.isPending
+        }
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={() => {
+          pendingConfirm?.action();
+          setPendingConfirm(null);
+        }}
+      />
     </div>
   );
 }
