@@ -7,9 +7,10 @@ A Raspberry Pi friendly music player app with a React frontend and Node.js backe
 ```bash
 git clone git@github.com:cksjava/music-player.git
 cd music-player
-chmod +x 01.sh 02.sh
+chmod +x 01.sh 02.sh configure-iqaudio-audio.sh
 ./01.sh
 ./02.sh
+./configure-iqaudio-audio.sh
 sudo reboot
 ```
 
@@ -34,6 +35,20 @@ http://<raspberry-pi-ip>:3847
 
 - Primary audio output HAT is **IQaudIO**.
 - Library audio files are expected to be mostly **M4A** or **FLAC**.
+
+## Audio Device Auto-Detection
+
+`configure-iqaudio-audio.sh` detects IQaudIO-like ALSA cards and chooses a matching mpv
+`audio-device` value. It then:
+
+- sets `/etc/asound.conf` so IQaudIO is the default system playback device
+- writes app audio variables into `.env`:
+  - `MPV_AO`
+  - `MPV_AUDIO_DEVICE`
+  - `IQAUDIO_ALSA_CARD_INDEX`
+  - `IQAUDIO_ALSA_CARD_ID`
+
+The backend loads `.env` via dotenv on startup.
 
 ## Screenshot
 
