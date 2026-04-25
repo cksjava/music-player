@@ -91,3 +91,14 @@ export interface ErrorLogEntry {
   message: string;
   detail?: string;
 }
+
+export interface FsDirectoryEntry {
+  name: string;
+  path: string;
+}
+
+export interface FsBrowseResponse {
+  current: string;
+  parent: string | null;
+  directories: FsDirectoryEntry[];
+}

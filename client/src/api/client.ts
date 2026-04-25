@@ -4,6 +4,7 @@ import type {
   AudioCdInfo,
   AudioDevice,
   ErrorLogEntry,
+  FsBrowseResponse,
   PlayerState,
   Playlist,
   Source,
@@ -131,6 +132,13 @@ export const musicApi = {
   errorLogs: (limit = 120) => api<{ logs: ErrorLogEntry[] }>(`/api/errors?limit=${limit}`),
 
   clearErrorLogs: () => api<{ ok: boolean }>("/api/errors", { method: "DELETE" }),
+
+  browseDirectories: (path?: string) => {
+    const sp = new URLSearchParams();
+    if (path) sp.set("path", path);
+    const q = sp.toString();
+    return api<FsBrowseResponse>(`/api/fs/directories${q ? `?${q}` : ""}`);
+  },
 
   tracks: (params: { q?: string; albumId?: string; artistId?: string; limit?: number; offset?: number }) => {
     const sp = new URLSearchParams();

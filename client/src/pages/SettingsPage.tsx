@@ -6,6 +6,7 @@ import {
   ArrowsClockwise,
   FolderOpen,
   HardDrives,
+  CaretUp,
   PauseCircle,
   Plus,
   SpeakerHigh,
@@ -28,6 +29,8 @@ export function SettingsPage(): ReactElement {
   const [path, setPath] = useState("");
   const [label, setLabel] = useState("");
   const [showLogs, setShowLogs] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerPath, setPickerPath] = useState("");
 
   const sourcesQ = useQuery({
     queryKey: ["sources"],
@@ -45,10 +48,16 @@ export function SettingsPage(): ReactElement {
     refetchInterval: 5_000,
   });
 
+  const pickerQ = useQuery({
+    queryKey: ["fs-directories", pickerPath],
+    queryFn: () => musicApi.browseDirectories(pickerPath || undefined),
+    enabled: showPicker,
+  });
+
   useEffect(() => {
-    const e = sourcesQ.error ?? devicesQ.error ?? logsQ.error;
+    const e = sourcesQ.error ?? devicesQ.error ?? logsQ.error ?? pickerQ.error;
     if (e) toast((e as Error).message);
-  }, [sourcesQ.error, devicesQ.error, logsQ.error, toast]);
+  }, [sourcesQ.error, devicesQ.error, logsQ.error, pickerQ.error, toast]);
 
   const addSource = useMutation({
     mutationFn: () =>
@@ -226,6 +235,17 @@ export function SettingsPage(): ReactElement {
             placeholder="/mnt/ssd/Music or full path"
             className="w-full rounded-xl border border-white/[0.08] bg-zinc-950/60 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-violet-500/40"
           />
+          <button
+            type="button"
+            onClick={() => {
+              setPickerPath(path.trim());
+              setShowPicker(true);
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-zinc-900/70 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-violet-500/30 hover:text-white"
+          >
+            <FolderOpen size={18} />
+            Browse folders
+          </button>
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -426,6 +446,93 @@ export function SettingsPage(): ReactElement {
                     ) : null}
                   </li>
                 ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {showPicker ? (
+        <div
+          className="fixed inset-0 z-[95] bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowPicker(false)}
+        >
+          <div
+            className="absolute inset-0 mx-auto flex h-full w-full max-w-2xl flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-zinc-300">
+                <FolderOpen size={18} className="text-fuchsia-400" />
+                Select source folder
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowPicker(false)}
+                className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
+                aria-label="Close folder picker"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mb-3 rounded-xl border border-white/[0.08] bg-zinc-900/60 px-3 py-2">
+              <p className="truncate font-mono text-xs text-zinc-300">
+                {pickerQ.data?.current ?? "Loading..."}
+              </p>
+            </div>
+
+            <div className="mb-3 flex gap-2">
+              <button
+                type="button"
+                disabled={!pickerQ.data?.parent}
+                onClick={() => {
+                  if (pickerQ.data?.parent) setPickerPath(pickerQ.data.parent);
+                }}
+                className="inline-flex items-center gap-1 rounded-lg border border-white/[0.1] bg-zinc-800/70 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:text-white disabled:opacity-40"
+              >
+                <CaretUp size={14} />
+                Up
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (pickerQ.data?.current) {
+                    setPath(pickerQ.data.current);
+                    if (!label.trim()) {
+                      const parts = pickerQ.data.current.split("/").filter(Boolean);
+                      setLabel(parts[parts.length - 1] ?? "");
+                    }
+                    setShowPicker(false);
+                  }
+                }}
+                className="inline-flex items-center gap-1 rounded-lg border border-fuchsia-500/35 bg-fuchsia-500/15 px-3 py-1.5 text-xs font-semibold text-fuchsia-200 transition hover:bg-fuchsia-500/25"
+              >
+                Use this folder
+              </button>
+            </div>
+
+            {pickerQ.isLoading ? (
+              <div className="h-28 animate-pulse rounded-xl bg-zinc-800/70" />
+            ) : (
+              <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-xl border border-white/[0.06] bg-black/20 p-2">
+                {(pickerQ.data?.directories ?? []).map((d) => (
+                  <li key={d.path}>
+                    <button
+                      type="button"
+                      onClick={() => setPickerPath(d.path)}
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-zinc-300 transition hover:bg-white/5 hover:text-white"
+                    >
+                      <FolderOpen size={16} className="text-fuchsia-400" />
+                      <span className="truncate">{d.name}</span>
+                    </button>
+                  </li>
+                ))}
+                {(pickerQ.data?.directories.length ?? 0) === 0 ? (
+                  <li className="px-2 py-6 text-center text-sm text-zinc-500">
+                    No subdirectories found.
+                  </li>
+                ) : null}
               </ul>
             )}
           </div>

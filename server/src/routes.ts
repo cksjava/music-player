@@ -1,7 +1,8 @@
 import type { Express, Request, Response } from "express";
 import type Database from "better-sqlite3";
+import { readdir } from "node:fs/promises";
 import { unlink } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, join, normalize, resolve } from "node:path";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { scanSource } from "./services/indexer.js";
@@ -89,6 +90,31 @@ export function registerRoutes(
   };
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, time: Date.now() });
+  });
+
+  app.get("/api/fs/directories", async (req, res) => {
+    const raw = String(req.query.path ?? "").trim();
+    const current = normalize(resolve(raw || process.env.HOME || "/"));
+    try {
+      const entries = await readdir(current, { withFileTypes: true });
+      const directories = entries
+        .filter((e) => e.isDirectory())
+        .map((e) => ({
+          name: e.name,
+          path: join(current, e.name),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      const parent = dirname(current);
+      res.json({
+        current,
+        parent: parent === current ? null : parent,
+        directories,
+      });
+    } catch (e) {
+      const msg = (e as Error).message;
+      pushErrorLog("fs", "failed to list directories", `${current}: ${msg}`);
+      res.status(500).json({ error: msg });
+    }
   });
 
   app.get("/api/errors", (req, res) => {
