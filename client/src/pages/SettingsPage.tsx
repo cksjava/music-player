@@ -49,6 +49,7 @@ function getFriendlyUpdateProgress(
 
   const stepToProgress: Record<string, number> = {
     initializing: 1,
+    "stop-playback": 1,
     "sudo-check": 1,
     "git-pull": 2,
     "npm-ci": 3,

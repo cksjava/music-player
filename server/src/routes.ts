@@ -821,6 +821,9 @@ export function registerRoutes(
         }
       };
       try {
+        updateJob.step = "stop-playback";
+        pushErrorLog("system", "update step started: stop-playback", "Stopping playback before update");
+        await player.stop();
         await runStep("sudo-check", "sudo", ["-n", "true"]);
         const before = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
         updateJob.beforeCommit = before.stdout.trim();
