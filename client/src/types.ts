@@ -112,3 +112,8 @@ export interface UpdateStatus {
   beforeCommit: string | null;
   afterCommit: string | null;
 }
+
+export interface AppVersion {
+  commit: string | null;
+  time: number;
+}

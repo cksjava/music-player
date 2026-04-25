@@ -31,7 +31,7 @@ type PendingConfirm = {
   action: () => void;
 } | null;
 
-const UPDATE_TOTAL_STEPS = 5;
+const UPDATE_TOTAL_STEPS = 4;
 
 function getFriendlyUpdateProgress(
   update: {
@@ -50,14 +50,12 @@ function getFriendlyUpdateProgress(
   const stepToProgress: Record<string, number> = {
     initializing: 1,
     "stop-playback": 1,
-    "sudo-check": 1,
     "git-pull": 2,
     "npm-ci": 3,
     "toolcheck-tsc": 3,
     "npm-build": 4,
-    "restart-service": 5,
-    "manual-restart-required": 5,
-    done: 5,
+    "manual-restart-required": 4,
+    done: 4,
   };
   const current = Math.min(
     UPDATE_TOTAL_STEPS,
@@ -231,7 +229,7 @@ export function SettingsPage(): ReactElement {
   const updateApp = useMutation({
     mutationFn: () => musicApi.updateApp(),
     onSuccess: () => {
-      toast("Update requested (git pull + restart). Wait and refresh.", "info");
+      toast("Update requested (git pull + build). Restart app after it completes.", "info");
       void qc.invalidateQueries({ queryKey: ["update-status"] });
     },
     onError: (err: Error) => toast(err.message),
@@ -457,7 +455,7 @@ export function SettingsPage(): ReactElement {
               setPendingConfirm({
                 title: "Update app",
                 message:
-                  "Run git pull, install dependencies, build, and restart the service now?",
+                  "Run git pull, install dependencies, and build now? You can restart the app after update completes.",
                 confirmLabel: "Update",
                 action: () => updateApp.mutate(),
               });

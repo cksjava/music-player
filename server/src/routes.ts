@@ -114,6 +114,11 @@ export function registerRoutes(
     res.json({ ok: true, time: Date.now() });
   });
 
+  app.get("/api/app-version", (_req, res) => {
+    const commit = process.env.APP_COMMIT?.trim() || null;
+    res.json({ commit, time: Date.now() });
+  });
+
   app.get("/api/admin/system/update-status", (_req, res) => {
     res.json({ update: updateJob });
   });
@@ -824,18 +829,6 @@ export function registerRoutes(
         updateJob.step = "stop-playback";
         pushErrorLog("system", "update step started: stop-playback", "Stopping playback before update");
         await player.stop();
-        let canRestartService = false;
-        try {
-          await runStep("sudo-check", "sudo", ["-n", "true"]);
-          canRestartService = true;
-        } catch {
-          // Keep updating even without passwordless sudo; user can restart manually.
-          pushErrorLog(
-            "system",
-            "update step warning: sudo-check",
-            "Passwordless sudo is not configured. The update will continue, but service restart will require manual action."
-          );
-        }
         const before = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
         updateJob.beforeCommit = before.stdout.trim();
         await runStep("git-pull", "git", ["pull", "--ff-only"]);
@@ -845,22 +838,11 @@ export function registerRoutes(
         await runStep("npm-build", "npm", ["run", "build"]);
         const after = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
         updateJob.afterCommit = after.stdout.trim();
-        if (canRestartService) {
-          updateJob.step = "restart-service";
-          pushErrorLog("system", "update completed", "Restarting music-player.service");
-          await execFileAsync("sudo", ["-n", "systemctl", "restart", "music-player.service"]);
-        } else {
-          updateJob.step = "manual-restart-required";
-          updateJob.status = "ok";
-          updateJob.finishedAt = Date.now();
-          updateJob.message =
-            "Update completed. Restart the app manually (sudo systemctl restart music-player.service).";
-          return;
-        }
+        updateJob.step = "manual-restart-required";
         updateJob.status = "ok";
         updateJob.finishedAt = Date.now();
-        updateJob.step = "done";
-        updateJob.message = "Update completed successfully";
+        updateJob.message =
+          "Update completed. Click Restart app to apply the new version.";
       } catch (e) {
         const msg = (e as Error).message;
         pushErrorLog("system", "app update failed", msg);

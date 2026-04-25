@@ -6,6 +6,7 @@ import type {
   ErrorLogEntry,
   FsBrowseResponse,
   UpdateStatus,
+  AppVersion,
   PlayerState,
   Playlist,
   Source,
@@ -15,6 +16,7 @@ import type {
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
@@ -35,6 +37,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const musicApi = {
   health: () => api<{ ok: boolean }>("/api/health"),
+  appVersion: () => api<AppVersion>("/api/app-version"),
 
   playerState: () =>
     api<{ state: PlayerState; current: (Track & { path: string }) | null }>(
