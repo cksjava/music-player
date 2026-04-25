@@ -755,7 +755,10 @@ export function registerRoutes(
     res.status(202).json({ ok: true, message: "App update requested" });
     setTimeout(async () => {
       try {
-        await execFileAsync("git", ["pull", "--ff-only"], { cwd: process.cwd() });
+        const cwd = process.cwd();
+        await execFileAsync("git", ["pull", "--ff-only"], { cwd });
+        await execFileAsync("npm", ["ci"], { cwd });
+        await execFileAsync("npm", ["run", "build"], { cwd });
         await execFileAsync("sudo", ["systemctl", "restart", "music-player.service"]);
       } catch (e) {
         const msg = (e as Error).message;

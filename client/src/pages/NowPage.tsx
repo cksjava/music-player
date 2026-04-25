@@ -188,7 +188,7 @@ export function NowPage(): ReactElement {
         <button
           type="button"
           onClick={() => void actions.toggle()}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-zinc-950 shadow-xl shadow-violet-900/30 transition hover:scale-[1.02] active:scale-95"
+          className="flex h-16 w-16 aspect-square items-center justify-center rounded-full bg-white text-zinc-950 shadow-xl shadow-violet-900/30 transition hover:scale-[1.02] active:scale-95"
           aria-label={playing ? "Pause" : "Play"}
         >
           {playing ? (

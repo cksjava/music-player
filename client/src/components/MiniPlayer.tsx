@@ -59,7 +59,7 @@ export function MiniPlayer(): ReactElement | null {
               e.preventDefault();
               void toggle();
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-zinc-950 shadow-lg transition hover:bg-zinc-100 active:scale-95"
+            className="flex h-11 w-11 aspect-square items-center justify-center rounded-full bg-white text-zinc-950 shadow-lg transition hover:bg-zinc-100 active:scale-95"
             aria-label={playing ? "Pause" : "Play"}
           >
             {playing ? (
