@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "J Audio Cassette";
+  src: url("./assets/fonts/JAudioCassette-Regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "J Audio Cassette", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+@layer base {
+  html {
+    @apply bg-zinc-950 text-zinc-100;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply min-h-dvh font-sans selection:bg-violet-500/30;
+  }
+}
+
+@utility safe-pb {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+}

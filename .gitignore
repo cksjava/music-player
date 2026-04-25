@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+*.db
+*.db-journal
+.DS_Store
+.env
+.env.local
+coverage/
+*.log
+mpv-socket
+
+# Runtime data
+server/data/
+server/server/data/
+*.db-shm
+*.db-wal
