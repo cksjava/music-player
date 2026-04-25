@@ -59,27 +59,35 @@ echo "==> Detecting mpv audio devices"
 MPV_HELP="$(mpv --no-config --audio-device=help 2>&1 || true)"
 echo "$MPV_HELP"
 
-MPV_AUDIO_DEVICE="$(
-  printf '%s\n' "$MPV_HELP" | awk '
-    /'\''/ {
-      line=tolower($0)
-      if (line ~ /alsa/ && line ~ /(iqaudio|hifiberry|dacplus|snd_rpi|rpi-dac)/) {
-        if (match($0, /'\''([^'\'']+)'\''/, m)) { print m[1]; exit }
-      }
-    }
-  '
-)"
+extract_mpv_id() {
+  # Extract first quoted token from a line like:
+  #   'alsa/....' (Description)
+  sed -n "s/^[[:space:]]*'\\([^']*\\)'.*/\\1/p" <<< "$1"
+}
+
+MPV_AUDIO_DEVICE=""
+while IFS= read -r line; do
+  lower="$(printf '%s' "$line" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$lower" == *"alsa"* ]] && [[ "$lower" =~ iqaudio|hifiberry|dacplus|snd_rpi|rpi-dac ]]; then
+    candidate="$(extract_mpv_id "$line")"
+    if [[ -n "$candidate" ]]; then
+      MPV_AUDIO_DEVICE="$candidate"
+      break
+    fi
+  fi
+done <<< "$MPV_HELP"
 
 if [[ -z "$MPV_AUDIO_DEVICE" ]]; then
-  MPV_AUDIO_DEVICE="$(
-    printf '%s\n' "$MPV_HELP" | awk -v card="$CARD_ID" '
-      /'\''/ {
-        if (index(tolower($0), "alsa/") && index($0, "CARD=" card)) {
-          if (match($0, /'\''([^'\'']+)'\''/, m)) { print m[1]; exit }
-        }
-      }
-    '
-  )"
+  while IFS= read -r line; do
+    lower="$(printf '%s' "$line" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$lower" == *"alsa/"* ]] && [[ "$line" == *"CARD=${CARD_ID}"* ]]; then
+      candidate="$(extract_mpv_id "$line")"
+      if [[ -n "$candidate" ]]; then
+        MPV_AUDIO_DEVICE="$candidate"
+        break
+      fi
+    fi
+  done <<< "$MPV_HELP"
 fi
 
 if [[ -z "$MPV_AUDIO_DEVICE" ]]; then
