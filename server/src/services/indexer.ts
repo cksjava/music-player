@@ -123,14 +123,35 @@ export async function scanSource(
     year: number | null
   ): string {
     const t = title.trim() || "Unknown album";
-    const row = db
+    const rows = db
       .prepare(
-        `SELECT id FROM albums
+        `SELECT id, year, artwork_path as artworkPath
+         FROM albums
          WHERE title = ? COLLATE NOCASE
-           AND IFNULL(year,0) = IFNULL(?,0)`
+         ORDER BY id`
       )
-      .get(t, year) as { id: string } | undefined;
-    if (row) return row.id;
+      .all(t) as { id: string; year: number | null; artworkPath: string | null }[];
+    if (rows.length > 0) {
+      const keepId = rows[0]!.id;
+      // Consolidate duplicate album rows by title so tracks from prior scans don't stay split.
+      if (rows.length > 1) {
+        const duplicateIds = rows.slice(1).map((r) => r.id);
+        const placeholders = duplicateIds.map(() => "?").join(",");
+        db.prepare(
+          `UPDATE tracks SET album_id = ? WHERE album_id IN (${placeholders})`
+        ).run(keepId, ...duplicateIds);
+        db.prepare(`DELETE FROM albums WHERE id IN (${placeholders})`).run(...duplicateIds);
+      }
+      const hasYear = rows.some((r) => r.year != null);
+      const hasArtwork = rows.some((r) => r.artworkPath != null);
+      if (!hasYear && year != null) {
+        db.prepare(`UPDATE albums SET year = ? WHERE id = ?`).run(year, keepId);
+      }
+      if (!hasArtwork) {
+        // artwork_path gets filled later in the scan path if present.
+      }
+      return keepId;
+    }
     const id = nanoid();
     db.prepare(
       `INSERT INTO albums (id, title, artist_id, year, artwork_path, source_id) VALUES (?,?,?,?,?,?)`
