@@ -100,17 +100,32 @@ if ! grep -Eq "^[[:space:]]*dtoverlay=${OVERLAY}([[:space:]]|,|$)" "${CONFIG_TXT
   echo "dtoverlay=${OVERLAY}" | sudo tee -a "${CONFIG_TXT}" >/dev/null
 fi
 
-echo "==> Creating ALSA default device config"
-sudo tee /etc/asound.conf >/dev/null <<'EOF'
+echo "==> Configuring ALSA default output device"
+APLAY_OUT="$(aplay -l 2>&1 || true)"
+CARD_ID=""
+while IFS= read -r line; do
+  lower="$(printf '%s' "$line" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$lower" =~ ^card[[:space:]]+[0-9]+: ]] && [[ "$lower" =~ iqaudio|hifiberry|dacplus|rpi[[:space:]_-]*dac|snd[_-]rpi ]]; then
+    CARD_ID="$(printf '%s' "$line" | sed -nE 's/^card[[:space:]]+[0-9]+:[[:space:]]*([^[:space:]]+).*/\1/p')"
+    break
+  fi
+done <<< "$APLAY_OUT"
+
+if [[ -n "$CARD_ID" ]]; then
+  sudo tee /etc/asound.conf >/dev/null <<EOF
 pcm.!default {
   type hw
-  card 0
+  card ${CARD_ID}
 }
 ctl.!default {
   type hw
-  card 0
+  card ${CARD_ID}
 }
 EOF
+  echo "==> ALSA default set to card ${CARD_ID}"
+else
+  echo "==> IQaudIO-like card not detected via aplay. Leaving existing /etc/asound.conf unchanged."
+fi
 
 echo "==> Creating systemd service at /etc/systemd/system/${SERVICE_NAME}"
 sudo tee "/etc/systemd/system/${SERVICE_NAME}" >/dev/null <<EOF
@@ -124,11 +139,10 @@ Type=simple
 User=${APP_USER}
 Group=${APP_GROUP}
 WorkingDirectory=${APP_DIR}
+EnvironmentFile=-${APP_DIR}/.env
 Environment=NODE_ENV=production
 Environment=PORT=3847
 Environment=MPV_AO=alsa
-# Most stable with ALSA default selected via /etc/asound.conf
-Environment=MPV_AUDIO_DEVICE=alsa
 Environment=CDROM_DEVICE=${CDROM_DEVICE}
 ExecStart=/usr/bin/npm run start
 Restart=always
@@ -142,6 +156,11 @@ echo "==> Enabling service"
 sudo usermod -aG cdrom "${APP_USER}" || true
 sudo systemctl daemon-reload
 sudo systemctl enable "${SERVICE_NAME}"
+
+if [[ -x "${APP_DIR}/configure-iqaudio-audio.sh" ]]; then
+  echo "==> Running IQaudIO auto-detection script to refresh .env"
+  "${APP_DIR}/configure-iqaudio-audio.sh" || true
+fi
 
 echo "==> Configuring passwordless sudo for app maintenance commands"
 SUDOERS_PATH="/etc/sudoers.d/music-player"
