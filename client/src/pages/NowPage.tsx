@@ -11,11 +11,13 @@ import {
   SkipBack,
   SkipForward,
   SpeakerHigh,
+  MusicNotesPlus,
   SpeakerSlash,
   SpeakerX,
   X,
 } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
+import { AddToPlaylistDialog } from "../components/AddToPlaylistDialog";
 import { formatMs } from "../lib/format";
 import { cn } from "../lib/cn";
 import { usePlayerActions, usePlayerState } from "../hooks/usePlayer";
@@ -33,12 +35,19 @@ export function NowPage(): ReactElement {
     select: (r) => r.tracks,
     enabled: queueIds.length > 0,
   });
+  const queueTrackById = useMemo(
+    () => new Map((queueTracks ?? []).map((t) => [t.id, t])),
+    [queueTracks]
+  );
 
   const [showQueue, setShowQueue] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
   const [artworkFailed, setArtworkFailed] = useState(false);
   const [scrub, setScrub] = useState<number | null>(null);
-  const pos = scrub ?? state?.positionMs ?? 0;
+  /** Shown after seek until server poll reports the new position (avoids thumb snapping back). */
+  const [pendingSeekMs, setPendingSeekMs] = useState<number | null>(null);
+  const pos = scrub ?? pendingSeekMs ?? state?.positionMs ?? 0;
   const dur = state?.durationMs ?? current?.durationMs ?? 0;
 
   const playing = state?.status === "playing";
@@ -51,11 +60,33 @@ export function NowPage(): ReactElement {
 
   useEffect(() => {
     setScrub(null);
+    setPendingSeekMs(null);
   }, [state?.trackId]);
+
+  useEffect(() => {
+    if (pendingSeekMs == null || state?.positionMs == null) return;
+    if (Math.abs(state.positionMs - pendingSeekMs) < 1200) {
+      setPendingSeekMs(null);
+    }
+  }, [pendingSeekMs, state?.positionMs]);
 
   useEffect(() => {
     setArtworkFailed(false);
   }, [current?.albumId]);
+
+  const commitSeekFromRange = useCallback(
+    (el: HTMLInputElement) => {
+      const raw = Number(el.value);
+      const max = dur > 0 ? dur : 0;
+      const ms = max > 0 ? Math.min(max, Math.max(0, raw)) : Math.max(0, raw);
+      setScrub(null);
+      setPendingSeekMs(ms);
+      void actions.seek(ms).catch(() => {
+        setPendingSeekMs(null);
+      });
+    },
+    [actions, dur]
+  );
 
   const repeatIcon = useMemo(() => {
     if (state?.repeat === "one")
@@ -150,13 +181,16 @@ export function NowPage(): ReactElement {
             max={dur > 0 ? dur : 1}
             step={500}
             value={dur > 0 ? pos : 0}
+            onInput={(e) => setScrub(Number((e.target as HTMLInputElement).value))}
             onChange={(e) => setScrub(Number(e.target.value))}
-            onPointerUp={() => {
-              if (scrub != null) void actions.seek(scrub);
+            onPointerUp={(e) => commitSeekFromRange(e.currentTarget)}
+            onPointerCancel={(e) => {
               setScrub(null);
+              setPendingSeekMs(null);
+              e.currentTarget.blur();
             }}
             onKeyUp={(e) => {
-              if (e.key === "Enter" && scrub != null) void actions.seek(scrub);
+              if (e.key === "Enter") commitSeekFromRange(e.currentTarget);
             }}
             disabled={!dur || dur <= 0}
             className="h-2 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800 accent-violet-500 disabled:opacity-40"
@@ -214,6 +248,17 @@ export function NowPage(): ReactElement {
           {repeatIcon}
         </button>
       </div>
+      <div className="mb-5 flex justify-center">
+        <button
+          type="button"
+          onClick={() => setShowAddToPlaylist(true)}
+          disabled={!current?.id}
+          className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-zinc-900/70 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-violet-500/40 hover:text-white disabled:opacity-40"
+        >
+          <MusicNotesPlus size={18} className="text-violet-300" />
+          Add current track to playlist
+        </button>
+      </div>
 
       {showQueue ? (
         <div
@@ -236,31 +281,48 @@ export function NowPage(): ReactElement {
               </button>
             </div>
             <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-xl border border-white/[0.05] bg-black/20 p-2">
-              {(queueTracks ?? []).map((t, i) => (
-                <li key={t.id}>
+              {queueIds.map((trackId, queueIndex) => {
+                const t = queueTrackById.get(trackId);
+                return (
+                <li key={`${trackId}-${queueIndex}`}>
                   <button
                     type="button"
                     onClick={() => {
-                      void actions.playIndex(i);
+                      void actions.playIndex(queueIndex);
                       setShowQueue(false);
                     }}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition",
-                      state?.queueIndex === i ? "bg-violet-500/15 text-white" : "hover:bg-white/5"
+                      state?.queueIndex === queueIndex
+                        ? "bg-violet-500/15 text-white"
+                        : "hover:bg-white/5"
                     )}
                   >
-                    <span className="w-6 text-xs tabular-nums text-zinc-500">{i + 1}</span>
-                    <span className="min-w-0 flex-1 truncate font-medium">{t.title}</span>
+                    <span className="w-6 text-xs tabular-nums text-zinc-500">{queueIndex + 1}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{t?.title ?? "Missing track"}</span>
+                      <span className="block truncate text-xs text-zinc-500">
+                        {t?.artistName ?? ""}
+                      </span>
+                    </span>
                     <span className="shrink-0 text-xs text-zinc-500">
-                      {formatMs(t.durationMs)}
+                      {formatMs(t?.durationMs ?? null)}
                     </span>
                   </button>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </div>
         </div>
       ) : null}
+
+      <AddToPlaylistDialog
+        open={showAddToPlaylist}
+        trackId={current?.id ?? null}
+        trackTitle={current?.title}
+        onClose={() => setShowAddToPlaylist(false)}
+      />
 
       {showVolume ? (
         <div

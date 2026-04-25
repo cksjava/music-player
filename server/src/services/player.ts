@@ -191,7 +191,7 @@ export class PlayerService {
     }
     this.state.queueIndex = next;
     const tid = this.state.queue[this.state.queueIndex]!;
-    await this.loadTrackById(tid, false);
+    await this.loadTrackById(tid, true);
   }
 
   private nextIndex(): number {
@@ -278,7 +278,16 @@ export class PlayerService {
       Math.min(this.state.queue.length - 1, startIndex)
     );
     const tid = this.state.queue[this.state.queueIndex]!;
-    await this.loadTrackById(tid, true);
+    const ok = await this.loadTrackById(tid, true);
+    if (ok) return;
+    // If selected item can't be loaded (e.g., stale queue entry), try later items.
+    let idx = this.state.queueIndex + 1;
+    while (idx < this.state.queue.length) {
+      this.state.queueIndex = idx;
+      const nextId = this.state.queue[idx]!;
+      if (await this.loadTrackById(nextId, true)) return;
+      idx += 1;
+    }
   }
 
   async playTrackNow(trackId: string): Promise<void> {
@@ -298,7 +307,7 @@ export class PlayerService {
     this.state.queue.push(...trackIds);
   }
 
-  private async loadTrackById(trackId: string, autoplay: boolean): Promise<void> {
+  private async loadTrackById(trackId: string, autoplay: boolean): Promise<boolean> {
     const virtual = this.cdTracksById.get(trackId);
     const row = virtual
       ? { path: virtual.path }
@@ -308,7 +317,7 @@ export class PlayerService {
     if (!row?.path) {
       this.state.error = "Track not found";
       pushErrorLog("playback", "track not found", trackId);
-      return;
+      return false;
     }
     this.state.trackId = trackId;
     this.state.status = "loading";
@@ -318,11 +327,13 @@ export class PlayerService {
       else await this.mpv.setProp("pause", false);
       this.state.status = autoplay ? "playing" : "paused";
       this.state.error = null;
+      return true;
     } catch (e) {
       this.state.status = "error";
       const msg = (e as Error).message;
       this.state.error = msg;
       pushErrorLog("playback", "failed to load track", msg);
+      return false;
     }
   }
 
@@ -367,7 +378,15 @@ export class PlayerService {
     }
     this.state.queueIndex = n;
     const tid = this.state.queue[n]!;
-    await this.loadTrackById(tid, true);
+    const ok = await this.loadTrackById(tid, true);
+    if (ok) return;
+    let idx = n + 1;
+    while (idx < this.state.queue.length) {
+      this.state.queueIndex = idx;
+      const nextId = this.state.queue[idx]!;
+      if (await this.loadTrackById(nextId, true)) return;
+      idx += 1;
+    }
   }
 
   async skipPrevious(): Promise<void> {
@@ -383,7 +402,15 @@ export class PlayerService {
     }
     this.state.queueIndex = p;
     const tid = this.state.queue[p]!;
-    await this.loadTrackById(tid, true);
+    const ok = await this.loadTrackById(tid, true);
+    if (ok) return;
+    let idx = p - 1;
+    while (idx >= 0) {
+      this.state.queueIndex = idx;
+      const prevId = this.state.queue[idx]!;
+      if (await this.loadTrackById(prevId, true)) return;
+      idx -= 1;
+    }
   }
 
   async setVolume(v: number): Promise<void> {

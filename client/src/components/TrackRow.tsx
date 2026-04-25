@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { ListPlus, Play, Trash } from "@phosphor-icons/react";
+import { ListPlus, MusicNotesPlus, Play, Trash } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 import { formatMs } from "../lib/format";
 import type { Track } from "../types";
@@ -12,6 +12,7 @@ export function TrackRow(props: {
   showActions?: boolean;
   onPlay: () => void;
   onQueue?: () => void;
+  onAddToPlaylist?: () => void;
   onRemove?: () => void;
   className?: string;
 }): ReactElement {
@@ -23,6 +24,7 @@ export function TrackRow(props: {
     showActions = true,
     onPlay,
     onQueue,
+    onAddToPlaylist,
     onRemove,
     className,
   } = props;
@@ -85,6 +87,19 @@ export function TrackRow(props: {
             aria-label="Add to queue"
           >
             <ListPlus size={22} />
+          </button>
+        ) : null}
+        {onAddToPlaylist ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToPlaylist();
+            }}
+            className="rounded-lg p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
+            aria-label="Add to playlist"
+          >
+            <MusicNotesPlus size={21} />
           </button>
         ) : null}
         <button

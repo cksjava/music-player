@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Disc, MusicNotesSimple, Play, Shuffle } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
+import { AddToPlaylistDialog } from "../components/AddToPlaylistDialog";
 import { PageHeader } from "../components/PageHeader";
 import { TrackRow } from "../components/TrackRow";
 import { formatMs } from "../lib/format";
@@ -29,6 +30,7 @@ export function AlbumPage(): ReactElement {
   const tracks = data?.tracks ?? [];
   const ids = tracks.map((t) => t.id);
   const [artworkFailed, setArtworkFailed] = useState(false);
+  const [playlistTrack, setPlaylistTrack] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     setArtworkFailed(false);
@@ -145,16 +147,23 @@ export function AlbumPage(): ReactElement {
                   track={t}
                   index={i}
                   showAlbum={false}
-                  showActions={false}
+                  showActions
                   active={playerData?.state.trackId === t.id}
                   onPlay={() => void playTrack(t.id)}
                   onQueue={() =>
                     void appendQueue([t.id]).catch((e) => toast((e as Error).message))
                   }
+                  onAddToPlaylist={() => setPlaylistTrack({ id: t.id, title: t.title })}
                 />
               </li>
             ))}
           </ul>
+          <AddToPlaylistDialog
+            open={Boolean(playlistTrack)}
+            trackId={playlistTrack?.id ?? null}
+            trackTitle={playlistTrack?.title}
+            onClose={() => setPlaylistTrack(null)}
+          />
         </>
       )}
     </div>
