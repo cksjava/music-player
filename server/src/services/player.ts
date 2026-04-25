@@ -21,6 +21,8 @@ export class PlayerService {
   private state: PlayerState;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private started = false;
+  /** Prevents double queue advance when both `end-file` and `eof-reached` fire. */
+  private trackEndInFlight = false;
   private cdTracksById = new Map<string, Track & { path: string }>();
 
   constructor(
@@ -150,7 +152,30 @@ export class PlayerService {
     }
   }
 
+  private scheduleNaturalTrackEnd(): void {
+    if (this.trackEndInFlight) return;
+    this.trackEndInFlight = true;
+    void (async () => {
+      try {
+        await this.onTrackEnded();
+      } catch (e) {
+        pushErrorLog("playback", "track-end handler failed", (e as Error).message);
+      } finally {
+        this.trackEndInFlight = false;
+      }
+    })();
+  }
+
   private onMpvEvent(ev: MpvEvent): void {
+    // Natural EOF is delivered as `end-file` over JSON IPC; `eof-reached` observe is a backup.
+    if (ev.event === "end-file") {
+      const reason = ev.reason;
+      if (reason === "eof") {
+        this.scheduleNaturalTrackEnd();
+      }
+      return;
+    }
+
     if (ev.event === "property-change" && ev.name === "time-pos") {
       const v = ev.data;
       if (typeof v === "number") this.state.positionMs = Math.round(v * 1000);
@@ -166,7 +191,7 @@ export class PlayerService {
     }
     if (ev.event === "property-change" && ev.name === "eof-reached") {
       if (ev.data === true) {
-        void this.onTrackEnded();
+        this.scheduleNaturalTrackEnd();
       }
     }
   }

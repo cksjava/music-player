@@ -111,10 +111,11 @@ export function NowPage(): ReactElement {
             }
             setShowAddToPlaylist(true);
           }}
-          className="pointer-events-auto inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-zinc-900/80 px-2.5 py-2 text-zinc-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:border-fuchsia-500/30 hover:text-white"
+          className="pointer-events-auto inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-zinc-900/80 px-3 py-2 text-zinc-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:border-fuchsia-500/30 hover:text-white"
           aria-label="Add current track to playlist"
         >
           <MusicNotesPlus size={20} className="text-fuchsia-300" weight="bold" />
+          <span className="text-xs font-semibold text-zinc-200">Add</span>
         </button>
         <button
           type="button"
