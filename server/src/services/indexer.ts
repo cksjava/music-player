@@ -28,6 +28,30 @@ function sortKey(name: string): string {
   return name.trim().toLowerCase();
 }
 
+function splitArtists(...values: Array<string | string[] | undefined>): string[] {
+  const raw: string[] = [];
+  for (const value of values) {
+    if (!value) continue;
+    if (Array.isArray(value)) raw.push(...value);
+    else raw.push(value);
+  }
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    const parts = String(item)
+      .split(/\s*(?:,|;|\/|&|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b|\bx\b)\s*/i)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    for (const p of parts) {
+      const key = sortKey(p);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(p);
+    }
+  }
+  return out;
+}
+
 function parseFilenameFallback(
   filename: string
 ): { title?: string; artist?: string; trackNumber?: number } {
@@ -103,9 +127,9 @@ export async function scanSource(
       .prepare(
         `SELECT id FROM albums
          WHERE title = ? COLLATE NOCASE
-           AND IFNULL(source_id,'') = IFNULL(?,'')`
+           AND IFNULL(year,0) = IFNULL(?,0)`
       )
-      .get(t, sourceId) as { id: string } | undefined;
+      .get(t, year) as { id: string } | undefined;
     if (row) return row.id;
     const id = nanoid();
     db.prepare(
@@ -131,6 +155,20 @@ export async function scanSource(
       bitrate = excluded.bitrate,
       sample_rate = excluded.sample_rate,
       mtime_ms = excluded.mtime_ms
+  `);
+  const clearTrackArtists = db.prepare(`DELETE FROM track_artists WHERE track_id = ?`);
+  const insertTrackArtist = db.prepare(
+    `INSERT OR IGNORE INTO track_artists (track_id, artist_id, position) VALUES (?,?,?)`
+  );
+  const findDuplicateTrack = db.prepare(`
+    SELECT id FROM tracks
+    WHERE album_id = @album_id
+      AND title = @title COLLATE NOCASE
+      AND IFNULL(disc_number,0) = IFNULL(@disc_number,0)
+      AND IFNULL(track_number,0) = IFNULL(@track_number,0)
+      AND IFNULL(duration_ms,0) = IFNULL(@duration_ms,0)
+      AND path <> @path
+    LIMIT 1
   `);
 
   async function walk(dir: string, folderAlbumHint: string | null): Promise<void> {
@@ -164,6 +202,7 @@ export async function scanSource(
       let albumTitle: string;
       let artistName: string | undefined;
       let albumArtistName: string | undefined;
+      let artistNames: string[] = [];
       let trackNo: number | null = null;
       let discNo: number | null = null;
       let durationMs: number | null = null;
@@ -190,6 +229,7 @@ export async function scanSource(
           firstText(common.artist) ||
           firstText(common.artists) ||
           fbName.artist;
+        artistNames = splitArtists(common.artists, common.artist, fbName.artist);
         if (common.track?.no != null) trackNo = common.track.no;
         else if (fbName.trackNumber != null) trackNo = fbName.trackNumber;
         if (common.disk?.no != null) discNo = common.disk.no;
@@ -213,13 +253,16 @@ export async function scanSource(
       } catch (e) {
         title = fbName.title || basename(full, ext);
         artistName = fbName.artist;
+        artistNames = splitArtists(fbName.artist);
         albumArtistName = undefined;
         albumTitle = folderAlbumHint || dirnameHint(full, rootPath);
         if (fbName.trackNumber != null) trackNo = fbName.trackNumber;
         result.errors.push(`${full}: metadata: ${(e as Error).message}`);
       }
 
-      const artistId = artistName ? getOrCreateArtist(artistName) : null;
+      if (artistNames.length === 0 && artistName) artistNames = splitArtists(artistName);
+      if (artistNames.length === 0 && albumArtistName) artistNames = splitArtists(albumArtistName);
+      const artistId = artistNames[0] ? getOrCreateArtist(artistNames[0]) : null;
       const albumArtistId = albumArtistName
         ? getOrCreateArtist(albumArtistName)
         : artistId;
@@ -236,6 +279,19 @@ export async function scanSource(
       const mtimeMs = Math.floor(st.mtimeMs);
       const isNew = !existing;
       const changed = existing && existing.mtime_ms !== mtimeMs;
+
+      const duplicate = findDuplicateTrack.get({
+        album_id: albumId,
+        title,
+        disc_number: discNo,
+        track_number: trackNo,
+        duration_ms: durationMs,
+        path: full,
+      }) as { id: string } | undefined;
+      if (duplicate && !existing) {
+        // Skip duplicate copies (same logical track from another folder).
+        continue;
+      }
 
       upsertTrack.run({
         id,
@@ -254,6 +310,12 @@ export async function scanSource(
       });
       if (isNew) result.added++;
       else if (changed) result.updated++;
+
+      const resolvedArtistIds = artistNames
+        .map((n) => getOrCreateArtist(n))
+        .filter((v): v is string => Boolean(v));
+      clearTrackArtists.run(id);
+      resolvedArtistIds.forEach((aid, i) => insertTrackArtist.run(id, aid, i));
     }
   }
 

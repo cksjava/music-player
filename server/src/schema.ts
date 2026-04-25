@@ -45,6 +45,15 @@ CREATE INDEX IF NOT EXISTS idx_tracks_album ON tracks(album_id);
 CREATE INDEX IF NOT EXISTS idx_tracks_artist ON tracks(artist_id);
 CREATE INDEX IF NOT EXISTS idx_tracks_title ON tracks(title);
 
+CREATE TABLE IF NOT EXISTS track_artists (
+  track_id TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+  artist_id TEXT NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (track_id, artist_id)
+);
+CREATE INDEX IF NOT EXISTS idx_track_artists_artist ON track_artists(artist_id);
+CREATE INDEX IF NOT EXISTS idx_track_artists_track ON track_artists(track_id);
+
 CREATE TABLE IF NOT EXISTS playlists (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

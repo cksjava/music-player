@@ -33,7 +33,7 @@ export class PlayerService {
       trackId: null,
       positionMs: 0,
       durationMs: null,
-      volume: 80,
+      volume: 20,
       muted: false,
       shuffle: false,
       repeat: "off",
@@ -65,10 +65,8 @@ export class PlayerService {
   }
 
   private loadSettings(): void {
-    const vol = this.db
-      .prepare(`SELECT value FROM settings WHERE key = 'volume'`)
-      .get() as { value: string } | undefined;
-    if (vol) this.state.volume = Math.min(130, Math.max(0, Number(vol.value) || 80));
+    // Always start from a safe default volume, regardless of persisted user changes.
+    this.state.volume = 20;
     const dev = this.db
       .prepare(`SELECT value FROM settings WHERE key = 'audio_device'`)
       .get() as { value: string } | undefined;

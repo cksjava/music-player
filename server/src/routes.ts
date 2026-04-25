@@ -320,10 +320,14 @@ export function registerRoutes(
     const params: unknown[] = [];
     if (q) {
       clauses.push(
-        `(t.title LIKE ? OR ar.name LIKE ? OR a.title LIKE ?)`
+        `(t.title LIKE ? OR ar.name LIKE ? OR a.title LIKE ? OR EXISTS (
+          SELECT 1 FROM track_artists ta
+          JOIN artists arx ON arx.id = ta.artist_id
+          WHERE ta.track_id = t.id AND arx.name LIKE ?
+        ))`
       );
       const like = `%${q.replace(/%/g, "")}%`;
-      params.push(like, like, like);
+      params.push(like, like, like, like);
     }
     if (albumId) {
       clauses.push(`t.album_id = ?`);
@@ -488,8 +492,12 @@ export function registerRoutes(
     const rows = db
       .prepare(
         `SELECT ar.id, ar.name,
-          (SELECT COUNT(*) FROM tracks t WHERE t.artist_id = ar.id) as trackCount,
-          (SELECT COUNT(DISTINCT t.album_id) FROM tracks t WHERE t.artist_id = ar.id AND t.album_id IS NOT NULL) as albumCount
+          (SELECT COUNT(DISTINCT t.id) FROM tracks t
+            LEFT JOIN track_artists ta ON ta.track_id = t.id
+            WHERE t.artist_id = ar.id OR ta.artist_id = ar.id) as trackCount,
+          (SELECT COUNT(DISTINCT t.album_id) FROM tracks t
+            LEFT JOIN track_artists ta ON ta.track_id = t.id
+            WHERE (t.artist_id = ar.id OR ta.artist_id = ar.id) AND t.album_id IS NOT NULL) as albumCount
         FROM artists ar
         ${where}
         ORDER BY ar.sort_key
@@ -516,23 +524,27 @@ export function registerRoutes(
         FROM albums a
         JOIN tracks t ON t.album_id = a.id
         LEFT JOIN artists ar ON ar.id = a.artist_id
-        WHERE t.artist_id = ?
+        WHERE t.artist_id = ? OR EXISTS (
+          SELECT 1 FROM track_artists ta WHERE ta.track_id = t.id AND ta.artist_id = ?
+        )
         ORDER BY a.title`
       )
-      .all(req.params.id) as Album[];
+      .all(req.params.id, req.params.id) as Album[];
     const tracks = db
       .prepare(
-        `SELECT t.id, t.path, t.title, t.disc_number as discNumber, t.track_number as trackNumber,
+        `SELECT DISTINCT t.id, t.path, t.title, t.disc_number as discNumber, t.track_number as trackNumber,
           t.duration_ms as durationMs, t.album_id as albumId, a.title as albumTitle,
           t.artist_id as artistId, ar.name as artistName, t.source_id as sourceId,
           t.codec, t.bitrate, t.sample_rate as sampleRate
         FROM tracks t
         LEFT JOIN albums a ON a.id = t.album_id
         LEFT JOIN artists ar ON ar.id = t.artist_id
-        WHERE t.artist_id = ?
+        WHERE t.artist_id = ? OR EXISTS (
+          SELECT 1 FROM track_artists ta WHERE ta.track_id = t.id AND ta.artist_id = ?
+        )
         ORDER BY a.title, t.disc_number, t.track_number`
       )
-      .all(req.params.id) as Track[];
+      .all(req.params.id, req.params.id) as Track[];
     res.json({ artist, albums, tracks });
   });
 
