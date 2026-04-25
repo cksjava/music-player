@@ -66,10 +66,17 @@ export function SettingsPage(): ReactElement {
     enabled: showPicker,
   });
 
+  const updateStatusQ = useQuery({
+    queryKey: ["update-status"],
+    queryFn: () => musicApi.updateStatus(),
+    refetchInterval: 2_000,
+  });
+
   useEffect(() => {
-    const e = sourcesQ.error ?? devicesQ.error ?? logsQ.error ?? pickerQ.error;
+    const e =
+      sourcesQ.error ?? devicesQ.error ?? logsQ.error ?? pickerQ.error ?? updateStatusQ.error;
     if (e) toast((e as Error).message);
-  }, [sourcesQ.error, devicesQ.error, logsQ.error, pickerQ.error, toast]);
+  }, [sourcesQ.error, devicesQ.error, logsQ.error, pickerQ.error, updateStatusQ.error, toast]);
 
   const addSource = useMutation({
     mutationFn: () =>
@@ -186,9 +193,12 @@ export function SettingsPage(): ReactElement {
     mutationFn: () => musicApi.updateApp(),
     onSuccess: () => {
       toast("Update requested (git pull + restart). Wait and refresh.", "info");
+      void qc.invalidateQueries({ queryKey: ["update-status"] });
     },
     onError: (err: Error) => toast(err.message),
   });
+
+  const updateStatus = updateStatusQ.data?.update;
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6">
@@ -416,6 +426,20 @@ export function SettingsPage(): ReactElement {
             <DownloadSimple size={20} className="text-indigo-300" />
             <span className="font-semibold">Update app</span>
           </button>
+          <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-xs text-indigo-100/90">
+            <p className="font-semibold">
+              Update status: {updateStatus?.status ?? "idle"}
+              {updateStatus?.step ? ` (${updateStatus.step})` : ""}
+            </p>
+            <p className="mt-1 text-[11px] text-zinc-300">
+              {updateStatus?.message ?? "No update run yet."}
+            </p>
+            {(updateStatus?.beforeCommit || updateStatus?.afterCommit) && (
+              <p className="mt-1 font-mono text-[10px] text-zinc-400">
+                {updateStatus.beforeCommit ?? "?"} {" -> "} {updateStatus.afterCommit ?? "?"}
+              </p>
+            )}
+          </div>
 
           <button
             type="button"

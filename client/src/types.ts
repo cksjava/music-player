@@ -102,3 +102,13 @@ export interface FsBrowseResponse {
   parent: string | null;
   directories: FsDirectoryEntry[];
 }
+
+export interface UpdateStatus {
+  status: "idle" | "running" | "ok" | "error";
+  startedAt: number | null;
+  finishedAt: number | null;
+  step: string | null;
+  message: string | null;
+  beforeCommit: string | null;
+  afterCommit: string | null;
+}

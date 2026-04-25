@@ -5,6 +5,7 @@ import type {
   AudioDevice,
   ErrorLogEntry,
   FsBrowseResponse,
+  UpdateStatus,
   PlayerState,
   Playlist,
   Source,
@@ -251,6 +252,9 @@ export const musicApi = {
     api<{ ok: boolean; message: string }>("/api/admin/system/update-app", {
       method: "POST",
     }),
+
+  updateStatus: () =>
+    api<{ update: UpdateStatus }>("/api/admin/system/update-status"),
 
   playlists: () => api<{ playlists: Playlist[] }>("/api/playlists"),
 

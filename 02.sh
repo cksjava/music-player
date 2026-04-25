@@ -35,6 +35,13 @@ APP_GROUP="$(id -gn "${APP_USER}")"
 APP_DIR="${SCRIPT_DIR}"
 SERVICE_NAME="music-player.service"
 CDROM_DEVICE="${CDROM_DEVICE:-/dev/sr0}"
+SYSTEMCTL_BIN="$(command -v systemctl || true)"
+SHUTDOWN_BIN="$(command -v shutdown || true)"
+
+if [[ -z "${SYSTEMCTL_BIN}" || -z "${SHUTDOWN_BIN}" ]]; then
+  echo "systemctl and shutdown are required."
+  exit 1
+fi
 
 echo "==> Installing runtime packages for service/discovery/audio"
 sudo apt-get update
@@ -135,6 +142,23 @@ echo "==> Enabling service"
 sudo usermod -aG cdrom "${APP_USER}" || true
 sudo systemctl daemon-reload
 sudo systemctl enable "${SERVICE_NAME}"
+
+echo "==> Configuring passwordless sudo for app maintenance commands"
+SUDOERS_PATH="/etc/sudoers.d/music-player"
+TMP_SUDOERS="$(mktemp)"
+cat > "${TMP_SUDOERS}" <<EOF
+# Managed by 02.sh for music-player maintenance APIs.
+${APP_USER} ALL=(root) NOPASSWD: ${SYSTEMCTL_BIN} restart ${SERVICE_NAME}, ${SHUTDOWN_BIN} -h now
+EOF
+
+if sudo test -f "${SUDOERS_PATH}" && sudo cmp -s "${TMP_SUDOERS}" "${SUDOERS_PATH}"; then
+  echo "==> Sudoers entry already up to date"
+else
+  sudo install -m 440 "${TMP_SUDOERS}" "${SUDOERS_PATH}"
+  sudo visudo -cf "${SUDOERS_PATH}"
+  echo "==> Updated ${SUDOERS_PATH}"
+fi
+rm -f "${TMP_SUDOERS}"
 
 cat <<EOF
 

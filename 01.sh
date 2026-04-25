@@ -3,6 +3,7 @@ set -euo pipefail
 
 # One-shot setup for Raspberry Pi OS (Trixie) 64-bit.
 # Installs system dependencies, Node.js, npm packages, and builds the app.
+# Safe to re-run (idempotent): package managers converge to desired state.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -56,8 +57,8 @@ fi
 echo "==> Node: $(node -v)"
 echo "==> npm:  $(npm -v)"
 
-echo "==> Installing npm dependencies"
-npm ci
+echo "==> Installing npm dependencies (including dev tools like tsc)"
+npm ci --include=dev --workspaces
 
 echo "==> Building client and server"
 npm run build

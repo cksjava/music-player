@@ -37,6 +37,25 @@ export function registerRoutes(
   const scanJobs = new Map<string, ScanJob>();
   const runningBySource = new Map<string, string>();
   const cdDevice = process.env.CDROM_DEVICE || "/dev/sr0";
+  type UpdateJobStatus = "idle" | "running" | "ok" | "error";
+  type UpdateJob = {
+    status: UpdateJobStatus;
+    startedAt: number | null;
+    finishedAt: number | null;
+    step: string | null;
+    message: string | null;
+    beforeCommit: string | null;
+    afterCommit: string | null;
+  };
+  const updateJob: UpdateJob = {
+    status: "idle",
+    startedAt: null,
+    finishedAt: null,
+    step: null,
+    message: null,
+    beforeCommit: null,
+    afterCommit: null,
+  };
 
   const resolveTrack = (id: string): (Track & { path: string }) | null => {
     const row = db
@@ -93,6 +112,10 @@ export function registerRoutes(
   };
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, time: Date.now() });
+  });
+
+  app.get("/api/admin/system/update-status", (_req, res) => {
+    res.json({ update: updateJob });
   });
 
   app.get("/api/fs/directories", async (req, res) => {
@@ -731,10 +754,14 @@ export function registerRoutes(
     // Execute after response is sent so the client receives acknowledgement.
     setTimeout(async () => {
       try {
-        await execFileAsync("sudo", ["shutdown", "-h", "now"]);
+        await execFileAsync("sudo", ["-n", "shutdown", "-h", "now"]);
       } catch (e) {
         const msg = (e as Error).message;
-        pushErrorLog("system", "device shutdown failed", msg);
+        pushErrorLog(
+          "system",
+          "device shutdown failed",
+          `${msg}\nConfigure passwordless sudo for shutdown in /etc/sudoers.d/music-player`
+        );
       }
     }, 250);
   });
@@ -743,24 +770,44 @@ export function registerRoutes(
     res.status(202).json({ ok: true, message: "App restart requested" });
     setTimeout(async () => {
       try {
-        await execFileAsync("sudo", ["systemctl", "restart", "music-player.service"]);
+        await execFileAsync("sudo", ["-n", "systemctl", "restart", "music-player.service"]);
       } catch (e) {
         const msg = (e as Error).message;
-        pushErrorLog("system", "app restart failed", msg);
+        pushErrorLog(
+          "system",
+          "app restart failed",
+          `${msg}\nConfigure passwordless sudo for systemctl in /etc/sudoers.d/music-player`
+        );
       }
     }, 250);
   });
 
   app.post("/api/admin/system/update-app", async (_req, res) => {
+    if (updateJob.status === "running") {
+      return res.status(409).json({ error: "Update already running" });
+    }
     res.status(202).json({ ok: true, message: "App update requested" });
     setTimeout(async () => {
       const cwd = process.cwd();
+      updateJob.status = "running";
+      updateJob.startedAt = Date.now();
+      updateJob.finishedAt = null;
+      updateJob.step = "initializing";
+      updateJob.message = "Update started";
+      updateJob.beforeCommit = null;
+      updateJob.afterCommit = null;
       const runStep = async (name: string, command: string, args: string[]): Promise<void> => {
+        updateJob.step = name;
         pushErrorLog("system", `update step started: ${name}`, `${command} ${args.join(" ")}`);
         try {
           const { stdout, stderr } = await execFileAsync(command, args, {
             cwd,
-            env: { ...process.env, NODE_ENV: "development" },
+            env: {
+              ...process.env,
+              NODE_ENV: "development",
+              npm_config_production: "false",
+              NPM_CONFIG_PRODUCTION: "false",
+            },
           });
           const output = `${stdout ?? ""}\n${stderr ?? ""}`.trim();
           if (output) {
@@ -774,15 +821,29 @@ export function registerRoutes(
         }
       };
       try {
+        await runStep("sudo-check", "sudo", ["-n", "true"]);
+        const before = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
+        updateJob.beforeCommit = before.stdout.trim();
         await runStep("git-pull", "git", ["pull", "--ff-only"]);
         // Force dev dependencies because build tooling (vite/tsc) lives in devDeps.
-        await runStep("npm-ci", "npm", ["ci", "--include=dev"]);
+        await runStep("npm-ci", "npm", ["ci", "--include=dev", "--workspaces"]);
+        await runStep("toolcheck-tsc", "npm", ["exec", "tsc", "--", "--version"]);
         await runStep("npm-build", "npm", ["run", "build"]);
+        const after = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
+        updateJob.afterCommit = after.stdout.trim();
+        updateJob.step = "restart-service";
         pushErrorLog("system", "update completed", "Restarting music-player.service");
-        await execFileAsync("sudo", ["systemctl", "restart", "music-player.service"]);
+        await execFileAsync("sudo", ["-n", "systemctl", "restart", "music-player.service"]);
+        updateJob.status = "ok";
+        updateJob.finishedAt = Date.now();
+        updateJob.step = "done";
+        updateJob.message = "Update completed successfully";
       } catch (e) {
         const msg = (e as Error).message;
         pushErrorLog("system", "app update failed", msg);
+        updateJob.status = "error";
+        updateJob.finishedAt = Date.now();
+        updateJob.message = msg;
       }
     }, 250);
   });
