@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "J Audio Cassette";
-  src: url("./assets/fonts/JAudioCassette-Regular.otf") format("opentype");
+  font-family: "Google Sans";
+  src: url("./assets/fonts/GoogleSans-Regular.ttf") format("truetype");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 
 @theme {
-  --font-sans: "J Audio Cassette", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Google Sans", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --color-brand-400: #a78bfa;
   --color-brand-500: #8b5cf6;
   --color-brand-600: #7c3aed;

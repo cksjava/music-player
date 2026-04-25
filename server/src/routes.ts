@@ -754,11 +754,31 @@ export function registerRoutes(
   app.post("/api/admin/system/update-app", async (_req, res) => {
     res.status(202).json({ ok: true, message: "App update requested" });
     setTimeout(async () => {
+      const cwd = process.cwd();
+      const runStep = async (name: string, command: string, args: string[]): Promise<void> => {
+        pushErrorLog("system", `update step started: ${name}`, `${command} ${args.join(" ")}`);
+        try {
+          const { stdout, stderr } = await execFileAsync(command, args, {
+            cwd,
+            env: { ...process.env, NODE_ENV: "development" },
+          });
+          const output = `${stdout ?? ""}\n${stderr ?? ""}`.trim();
+          if (output) {
+            pushErrorLog("system", `update step output: ${name}`, output.slice(0, 4000));
+          }
+        } catch (e) {
+          const err = e as Error & { stdout?: string; stderr?: string };
+          const details = [err.message, err.stderr, err.stdout].filter(Boolean).join("\n");
+          pushErrorLog("system", `update step failed: ${name}`, details.slice(0, 4000));
+          throw e;
+        }
+      };
       try {
-        const cwd = process.cwd();
-        await execFileAsync("git", ["pull", "--ff-only"], { cwd });
-        await execFileAsync("npm", ["ci"], { cwd });
-        await execFileAsync("npm", ["run", "build"], { cwd });
+        await runStep("git-pull", "git", ["pull", "--ff-only"]);
+        // Force dev dependencies because build tooling (vite/tsc) lives in devDeps.
+        await runStep("npm-ci", "npm", ["ci", "--include=dev"]);
+        await runStep("npm-build", "npm", ["run", "build"]);
+        pushErrorLog("system", "update completed", "Restarting music-player.service");
         await execFileAsync("sudo", ["systemctl", "restart", "music-player.service"]);
       } catch (e) {
         const msg = (e as Error).message;
