@@ -62,7 +62,7 @@ export function TrackRow(props: {
         </span>
       </button>
       {showActions ? (
-      <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition md:opacity-0 md:group-hover:opacity-100">
+      <div className="flex shrink-0 items-center gap-0.5">
         {onRemove ? (
           <button
             type="button"
