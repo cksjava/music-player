@@ -31,6 +31,43 @@ type PendingConfirm = {
   action: () => void;
 } | null;
 
+const UPDATE_TOTAL_STEPS = 5;
+
+function getFriendlyUpdateProgress(
+  update: {
+    status: "idle" | "running" | "ok" | "error";
+    step: string | null;
+    message: string | null;
+  } | null | undefined
+): { current: number; label: string } {
+  if (!update || update.status === "idle") {
+    return { current: 0, label: "Ready to update" };
+  }
+  if (update.status === "ok") {
+    return { current: UPDATE_TOTAL_STEPS, label: "Update complete" };
+  }
+
+  const stepToProgress: Record<string, number> = {
+    initializing: 1,
+    "sudo-check": 1,
+    "git-pull": 2,
+    "npm-ci": 3,
+    "toolcheck-tsc": 3,
+    "npm-build": 4,
+    "restart-service": 5,
+    done: 5,
+  };
+  const current = Math.min(
+    UPDATE_TOTAL_STEPS,
+    Math.max(1, stepToProgress[update.step ?? ""] ?? 1)
+  );
+
+  if (update.status === "error") {
+    return { current, label: "Update failed (check logs)" };
+  }
+  return { current, label: "Updating app..." };
+}
+
 export function SettingsPage(): ReactElement {
   const toast = useToast();
   const qc = useQueryClient();
@@ -199,6 +236,8 @@ export function SettingsPage(): ReactElement {
   });
 
   const updateStatus = updateStatusQ.data?.update;
+  const updateProgress = getFriendlyUpdateProgress(updateStatus);
+  const updatePercent = Math.round((updateProgress.current / UPDATE_TOTAL_STEPS) * 100);
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6">
@@ -427,12 +466,27 @@ export function SettingsPage(): ReactElement {
             <span className="font-semibold">Update app</span>
           </button>
           <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-xs text-indigo-100/90">
-            <p className="font-semibold">
-              Update status: {updateStatus?.status ?? "idle"}
-              {updateStatus?.step ? ` (${updateStatus.step})` : ""}
-            </p>
-            <p className="mt-1 text-[11px] text-zinc-300">
-              {updateStatus?.message ?? "No update run yet."}
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="font-semibold">{updateProgress.label}</p>
+              <p className="font-mono text-[11px] text-zinc-300">
+                Step {updateProgress.current}/{UPDATE_TOTAL_STEPS}
+              </p>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800/80">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  updateStatus?.status === "error" ? "bg-rose-400" : "bg-indigo-400"
+                )}
+                style={{ width: `${updatePercent}%` }}
+              />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-300">
+              {updateStatus?.status === "error"
+                ? "Could not finish update. Open error logs for details."
+                : updateStatus?.status === "ok"
+                  ? "App is up to date."
+                  : "Update may take up to a minute on Raspberry Pi."}
             </p>
             {(updateStatus?.beforeCommit || updateStatus?.afterCommit) && (
               <p className="mt-1 font-mono text-[10px] text-zinc-400">
