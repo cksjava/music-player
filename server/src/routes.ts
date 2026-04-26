@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import type Database from "better-sqlite3";
 import { execFile } from "node:child_process";
-import { readdir } from "node:fs/promises";
+import { appendFile, mkdir, readdir } from "node:fs/promises";
 import { unlink } from "node:fs/promises";
 import { dirname, join, normalize, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -22,6 +22,7 @@ export function registerRoutes(
   const execFileAsync = promisify(execFile);
   const dataDir = process.env.DATA_DIR ?? join(process.cwd(), "server", "data");
   const artworkDir = join(dataDir, "artwork");
+  const updateLogFile = join(dataDir, "update-process.log");
   type ScanJobStatus = "queued" | "running" | "done" | "error";
   type ScanJob = {
     id: string;
@@ -55,6 +56,15 @@ export function registerRoutes(
     message: null,
     beforeCommit: null,
     afterCommit: null,
+  };
+
+  const appendUpdateLog = async (line: string): Promise<void> => {
+    try {
+      await mkdir(dataDir, { recursive: true });
+      await appendFile(updateLogFile, `${line}\n`, "utf8");
+    } catch {
+      // Never fail update flow due to logging issues.
+    }
   };
 
   const resolveTrack = (id: string): (Track & { path: string }) | null => {
@@ -798,6 +808,7 @@ export function registerRoutes(
     res.status(202).json({ ok: true, message: "App update requested" });
     setTimeout(async () => {
       const cwd = process.cwd();
+      const runId = `run-${Date.now()}`;
       updateJob.status = "running";
       updateJob.startedAt = Date.now();
       updateJob.finishedAt = null;
@@ -806,8 +817,13 @@ export function registerRoutes(
       updateJob.beforeCommit = null;
       updateJob.afterCommit = null;
       const runStep = async (name: string, command: string, args: string[]): Promise<void> => {
+        const startedAt = Date.now();
+        const commandText = `${command} ${args.join(" ")}`.trim();
         updateJob.step = name;
         pushErrorLog("system", `update step started: ${name}`, `${command} ${args.join(" ")}`);
+        await appendUpdateLog(
+          `[${new Date().toISOString()}] [${runId}] STEP ${name} START\n  command: ${commandText}`
+        );
         try {
           const { stdout, stderr } = await execFileAsync(command, args, {
             cwd,
@@ -819,20 +835,44 @@ export function registerRoutes(
             },
           });
           const output = `${stdout ?? ""}\n${stderr ?? ""}`.trim();
+          const elapsedMs = Date.now() - startedAt;
           if (output) {
             pushErrorLog("system", `update step output: ${name}`, output.slice(0, 4000));
           }
+          await appendUpdateLog(
+            `[${new Date().toISOString()}] [${runId}] STEP ${name} END ok (${elapsedMs}ms)`
+          );
+          await appendUpdateLog(
+            `  stdout:\n${(stdout ?? "").trim() || "(empty)"}\n  stderr:\n${(stderr ?? "").trim() || "(empty)"}`
+          );
         } catch (e) {
           const err = e as Error & { stdout?: string; stderr?: string };
           const details = [err.message, err.stderr, err.stdout].filter(Boolean).join("\n");
+          const elapsedMs = Date.now() - startedAt;
           pushErrorLog("system", `update step failed: ${name}`, details.slice(0, 4000));
+          await appendUpdateLog(
+            `[${new Date().toISOString()}] [${runId}] STEP ${name} END error (${elapsedMs}ms)`
+          );
+          await appendUpdateLog(
+            `  error: ${err.message}\n  stdout:\n${(err.stdout ?? "").trim() || "(empty)"}\n  stderr:\n${(err.stderr ?? "").trim() || "(empty)"}`
+          );
           throw e;
         }
       };
       try {
+        await appendUpdateLog(
+          `[${new Date().toISOString()}] [${runId}] UPDATE START\n  cwd: ${cwd}`
+        );
         updateJob.step = "stop-playback";
         pushErrorLog("system", "update step started: stop-playback", "Stopping playback before update");
+        await appendUpdateLog(
+          `[${new Date().toISOString()}] [${runId}] STEP stop-playback START\n  action: player.stop()`
+        );
+        const stopStartedAt = Date.now();
         await player.stop();
+        await appendUpdateLog(
+          `[${new Date().toISOString()}] [${runId}] STEP stop-playback END ok (${Date.now() - stopStartedAt}ms)`
+        );
         const before = await execFileAsync("git", ["rev-parse", "--short", "HEAD"], { cwd });
         updateJob.beforeCommit = before.stdout.trim();
         await runStep("git-pull", "git", ["pull", "--ff-only"]);
@@ -847,12 +887,18 @@ export function registerRoutes(
         updateJob.finishedAt = Date.now();
         updateJob.message =
           "Update completed. Click Restart app to apply the new version.";
+        await appendUpdateLog(
+          `[${new Date().toISOString()}] [${runId}] UPDATE END ok\n  before: ${updateJob.beforeCommit ?? "?"}\n  after: ${updateJob.afterCommit ?? "?"}\n  message: ${updateJob.message}`
+        );
       } catch (e) {
         const msg = (e as Error).message;
         pushErrorLog("system", "app update failed", msg);
         updateJob.status = "error";
         updateJob.finishedAt = Date.now();
         updateJob.message = msg;
+        await appendUpdateLog(
+          `[${new Date().toISOString()}] [${runId}] UPDATE END error\n  message: ${msg}`
+        );
       }
     }, 250);
   });
