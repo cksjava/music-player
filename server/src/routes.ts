@@ -775,13 +775,17 @@ export function registerRoutes(
     res.status(202).json({ ok: true, message: "App restart requested" });
     setTimeout(async () => {
       try {
-        await execFileAsync("sudo", ["-n", "systemctl", "restart", "music-player.service"]);
+        // Prefer self-termination so systemd Restart=always revives the service
+        // without relying on passwordless sudo.
+        pushErrorLog("system", "app restart requested", "Exiting process for supervised restart");
+        await player.shutdown();
+        process.exit(0);
       } catch (e) {
         const msg = (e as Error).message;
         pushErrorLog(
           "system",
           "app restart failed",
-          `${msg}\nConfigure passwordless sudo for systemctl in /etc/sudoers.d/music-player`
+          `${msg}\nIf running under systemd, ensure Restart=always is configured.`
         );
       }
     }, 250);
