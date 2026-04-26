@@ -13,11 +13,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const PORT = Number(process.env.PORT) || 3847;
-const dbPath = process.env.DATA_DIR
-  ? join(process.env.DATA_DIR, "library.db")
-  : join(__dirname, "..", "data", "library.db");
-
-const db = openDatabase(dbPath);
+const defaultDataDir = join(__dirname, "..", "data");
+const preferredDataDir = process.env.DATA_DIR?.trim() || defaultDataDir;
+const db = (() => {
+  try {
+    return openDatabase(join(preferredDataDir, "library.db"));
+  } catch (err) {
+    if (preferredDataDir !== defaultDataDir) {
+      console.warn(
+        `[startup] Could not open DATA_DIR at "${preferredDataDir}". Falling back to "${defaultDataDir}".`,
+        err
+      );
+      process.env.DATA_DIR = defaultDataDir;
+      return openDatabase(join(defaultDataDir, "library.db"));
+    }
+    throw err;
+  }
+})();
 const player = new PlayerService(db);
 
 const app = express();
