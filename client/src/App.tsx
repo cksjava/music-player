@@ -12,6 +12,7 @@ import { NowPage } from "./pages/NowPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AudioCdPage } from "./pages/AudioCdPage";
 import { ToastProvider } from "./context/ToastContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { musicApi } from "./api/client";
 import { useToast } from "./context/ToastContext";
 
@@ -45,23 +46,25 @@ function VersionWatcher(): null {
 
 export default function App(): ReactElement {
   return (
-    <BrowserRouter>
-      <ToastProvider>
-        <VersionWatcher />
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<Navigate to="/library" replace />} />
-            <Route path="/library" element={<LibraryPage />} />
-            <Route path="/library/album/:id" element={<AlbumPage />} />
-            <Route path="/library/artist/:id" element={<ArtistPage />} />
-            <Route path="/playlists" element={<PlaylistsPage />} />
-            <Route path="/playlists/:id" element={<PlaylistPage />} />
-            <Route path="/cd" element={<AudioCdPage />} />
-            <Route path="/now" element={<NowPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Route>
-        </Routes>
-      </ToastProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <ToastProvider>
+          <VersionWatcher />
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Navigate to="/library" replace />} />
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/library/album/:id" element={<AlbumPage />} />
+              <Route path="/library/artist/:id" element={<ArtistPage />} />
+              <Route path="/playlists" element={<PlaylistsPage />} />
+              <Route path="/playlists/:id" element={<PlaylistPage />} />
+              <Route path="/cd" element={<AudioCdPage />} />
+              <Route path="/now" element={<NowPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+          </Routes>
+        </ToastProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

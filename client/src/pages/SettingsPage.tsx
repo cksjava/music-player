@@ -7,11 +7,14 @@ import {
   DownloadSimple,
   FolderOpen,
   HardDrives,
+  Palette,
   CaretUp,
   Power,
   PauseCircle,
   Plus,
+  Moon,
   SpeakerHigh,
+  Sun,
   WarningCircle,
   Trash,
   X,
@@ -21,6 +24,7 @@ import { PageHeader } from "../components/PageHeader";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { usePlayerActions, usePlayerState } from "../hooks/usePlayer";
 import { useToast } from "../context/ToastContext";
+import { useTheme } from "../context/ThemeContext";
 import { cn } from "../lib/cn";
 
 type PendingConfirm = {
@@ -70,6 +74,7 @@ function getFriendlyUpdateProgress(
 
 export function SettingsPage(): ReactElement {
   const toast = useToast();
+  const { theme, mode, setTheme, setMode, themeOptions } = useTheme();
   const qc = useQueryClient();
   const { data: playerData } = usePlayerState();
   const { setDevice, stop } = usePlayerActions();
@@ -249,6 +254,74 @@ export function SettingsPage(): ReactElement {
 
       <section className="mb-10">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
+          <Palette size={18} className="text-violet-400" />
+          Appearance
+        </h2>
+        <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-4">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+              Theme
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {themeOptions.map((option) => {
+                const active = theme === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setTheme(option.id)}
+                    className={cn(
+                      "rounded-xl border px-3 py-2 text-left transition",
+                      active
+                        ? "border-violet-500/50 bg-violet-500/15 text-white"
+                        : "border-white/[0.08] bg-zinc-900/60 text-zinc-300 hover:border-violet-500/30 hover:text-white"
+                    )}
+                  >
+                    <p className="text-sm font-semibold">{option.label}</p>
+                    <p className="text-xs text-zinc-500">{option.fontLabel}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+              Mode
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setMode("light")}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition",
+                  mode === "light"
+                    ? "border-violet-500/50 bg-violet-500/15 text-white"
+                    : "border-white/[0.08] bg-zinc-900/60 text-zinc-300 hover:border-violet-500/30 hover:text-white"
+                )}
+              >
+                <Sun size={18} />
+                Light
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("dark")}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition",
+                  mode === "dark"
+                    ? "border-violet-500/50 bg-violet-500/15 text-white"
+                    : "border-white/[0.08] bg-zinc-900/60 text-zinc-300 hover:border-violet-500/30 hover:text-white"
+                )}
+              >
+                <Moon size={18} />
+                Dark
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
           <HardDrives size={18} className="text-violet-400" />
           Audio output
         </h2>
@@ -412,7 +485,8 @@ export function SettingsPage(): ReactElement {
           <Broom size={18} className="text-amber-400" />
           Maintenance
         </h2>
-        <div className="space-y-2 rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-3">
+        <div className="rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-2.5">
+          <div className="grid grid-cols-2 gap-1.5">
           <button
             type="button"
             onClick={() =>
@@ -420,18 +494,18 @@ export function SettingsPage(): ReactElement {
                 .then(() => toast("Playback stopped", "info"))
                 .catch((e) => toast((e as Error).message))
             }
-            className="flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-zinc-900/60 px-4 py-3 text-left text-sm text-zinc-200 transition hover:border-violet-500/30 hover:text-white"
+            className="flex w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 py-2.5 text-left text-[13px] font-medium text-zinc-200 transition hover:border-violet-500/30 hover:text-white"
           >
-            <PauseCircle size={22} className="text-violet-300" />
-            <span className="font-semibold">Stop playback now</span>
+            <PauseCircle size={18} className="text-violet-300" />
+            <span>Stop Playback</span>
           </button>
           <button
             type="button"
             onClick={() => setShowLogs(true)}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-zinc-900/60 px-4 py-3 text-left text-sm text-zinc-200 transition hover:border-rose-500/30 hover:text-white"
+            className="flex w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 py-2.5 text-left text-[13px] font-medium text-zinc-200 transition hover:border-rose-500/30 hover:text-white"
           >
-            <WarningCircle size={22} className="text-rose-300" />
-            <span className="font-semibold">Show error logs</span>
+            <WarningCircle size={18} className="text-rose-300" />
+            <span>Error Logs</span>
           </button>
           <button
             type="button"
@@ -444,10 +518,10 @@ export function SettingsPage(): ReactElement {
               });
             }}
             disabled={restartApp.isPending}
-            className="flex w-full items-center gap-3 rounded-xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-left text-sm text-sky-100 transition hover:bg-sky-500/15 disabled:opacity-50"
+            className="flex w-full items-center gap-2 rounded-lg border border-sky-500/25 bg-sky-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-sky-100 transition hover:bg-sky-500/15 disabled:opacity-50"
           >
-            <ArrowsClockwise size={20} className="text-sky-300" />
-            <span className="font-semibold">Restart app</span>
+            <ArrowsClockwise size={17} className="text-sky-300" />
+            <span>Restart App</span>
           </button>
           <button
             type="button"
@@ -461,12 +535,12 @@ export function SettingsPage(): ReactElement {
               });
             }}
             disabled={updateApp.isPending}
-            className="flex w-full items-center gap-3 rounded-xl border border-indigo-500/25 bg-indigo-500/10 px-4 py-3 text-left text-sm text-indigo-100 transition hover:bg-indigo-500/15 disabled:opacity-50"
+            className="flex w-full items-center gap-2 rounded-lg border border-indigo-500/25 bg-indigo-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-indigo-100 transition hover:bg-indigo-500/15 disabled:opacity-50"
           >
-            <DownloadSimple size={20} className="text-indigo-300" />
-            <span className="font-semibold">Update app</span>
+            <DownloadSimple size={17} className="text-indigo-300" />
+            <span>Update App</span>
           </button>
-          <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-xs text-indigo-100/90">
+          <div className="col-span-2 rounded-lg border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-[11px] text-indigo-100/90">
             <div className="mb-2 flex items-center justify-between gap-3">
               <p className="font-semibold">{updateProgress.label}</p>
               {!isUpdateIdle ? (
@@ -512,10 +586,10 @@ export function SettingsPage(): ReactElement {
                 action: () => resetLibrary.mutate(),
               });
             }}
-            className="flex w-full items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-left text-sm text-amber-100 transition hover:bg-amber-500/15"
+            className="flex w-full items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-amber-100 transition hover:bg-amber-500/15"
           >
-            <Broom size={20} className="text-amber-300" />
-            <span className="font-semibold">Clean library</span>
+            <Broom size={17} className="text-amber-300" />
+            <span>Clean Library</span>
           </button>
           <button
             type="button"
@@ -530,11 +604,12 @@ export function SettingsPage(): ReactElement {
               });
             }}
             disabled={shutdownDevice.isPending}
-            className="flex w-full items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-left text-sm text-red-100 transition hover:bg-red-500/15 disabled:opacity-50"
+            className="flex w-full items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-red-100 transition hover:bg-red-500/15 disabled:opacity-50"
           >
-            <Power size={20} className="text-red-300" />
-            <span className="font-semibold">Shut down device</span>
+            <Power size={17} className="text-red-300" />
+            <span>Shut Down</span>
           </button>
+          </div>
         </div>
       </section>
 
