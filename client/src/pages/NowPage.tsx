@@ -148,11 +148,17 @@ export function NowPage(): ReactElement {
       </div>
 
       <div className="relative mb-6 mt-1 overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-zinc-800/80 to-zinc-950 shadow-2xl ring-1 ring-white/[0.04]">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(139,92,246,0.35),transparent_55%),radial-gradient(ellipse_at_100%_40%,rgba(217,70,239,0.2),transparent_45%)]" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse_at_30%_0%,var(--now-gradient-a),transparent 55%),radial-gradient(ellipse_at_100%_40%,var(--now-gradient-b),transparent 45%)",
+          }}
+        />
         <div className="relative flex flex-col items-center px-6 pb-7 pt-9">
           <div
             className={cn(
-              "relative mb-7 h-[13.5rem] w-[13.5rem] rounded-full border border-white/10 bg-[conic-gradient(from_210deg_at_50%_50%,rgba(255,255,255,0.14),rgba(255,255,255,0.05),rgba(255,255,255,0.14))] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.55)] ring-1 ring-white/10 sm:h-[15.25rem] sm:w-[15.25rem]",
+              "relative mb-7 h-[16.5rem] w-[16.5rem] rounded-full border border-white/10 bg-[conic-gradient(from_210deg_at_50%_50%,rgba(255,255,255,0.14),rgba(255,255,255,0.05),rgba(255,255,255,0.14))] p-4 shadow-[0_20px_55px_rgba(0,0,0,0.55)] ring-1 ring-white/10 sm:h-[19rem] sm:w-[19rem]",
               playing && "animate-[spin_18s_linear_infinite]"
             )}
           >

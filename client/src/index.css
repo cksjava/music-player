@@ -56,6 +56,8 @@
   --theme-radius-xl: 0.48rem;
   --theme-radius-2xl: 0.6rem;
   --selection-color: rgb(139 92 246 / 0.28);
+  --now-gradient-a: rgb(139 92 246 / 0.35);
+  --now-gradient-b: rgb(217 70 239 / 0.2);
 }
 
 html[data-theme="aurora"] {
@@ -206,11 +208,15 @@ html[data-mode="light"] {
 html[data-theme="aurora"][data-mode="dark"] {
   --theme-font-sans: "Lato";
   --selection-color: rgb(139 92 246 / 0.30);
+  --now-gradient-a: rgb(139 92 246 / 0.35);
+  --now-gradient-b: rgb(217 70 239 / 0.2);
 }
 
 html[data-theme="aurora"][data-mode="light"] {
   --theme-font-sans: "Lato";
   --selection-color: rgb(76 29 149 / 0.20);
+  --now-gradient-a: rgb(109 40 217 / 0.25);
+  --now-gradient-b: rgb(192 38 211 / 0.18);
   --color-violet-400: #6d28d9;
   --color-violet-500: #5b21b6;
   --color-violet-600: #4c1d95;
@@ -223,6 +229,8 @@ html[data-theme="aurora"][data-mode="light"] {
 html[data-theme="ocean"][data-mode="dark"] {
   --theme-font-sans: "Roboto";
   --selection-color: rgb(6 182 212 / 0.30);
+  --now-gradient-a: rgb(6 182 212 / 0.35);
+  --now-gradient-b: rgb(14 165 233 / 0.2);
   --color-violet-400: #22d3ee;
   --color-violet-500: #06b6d4;
   --color-violet-600: #0891b2;
@@ -235,6 +243,8 @@ html[data-theme="ocean"][data-mode="dark"] {
 html[data-theme="ocean"][data-mode="light"] {
   --theme-font-sans: "Roboto";
   --selection-color: rgb(8 47 73 / 0.20);
+  --now-gradient-a: rgb(14 116 144 / 0.24);
+  --now-gradient-b: rgb(3 105 161 / 0.18);
   --color-violet-400: #0e7490;
   --color-violet-500: #155e75;
   --color-violet-600: #164e63;
@@ -247,6 +257,8 @@ html[data-theme="ocean"][data-mode="light"] {
 html[data-theme="sunset"][data-mode="dark"] {
   --theme-font-sans: "Poppins";
   --selection-color: rgb(236 72 153 / 0.32);
+  --now-gradient-a: rgb(244 63 94 / 0.33);
+  --now-gradient-b: rgb(249 115 22 / 0.22);
   --color-violet-400: #fb7185;
   --color-violet-500: #f43f5e;
   --color-violet-600: #e11d48;
@@ -259,6 +271,8 @@ html[data-theme="sunset"][data-mode="dark"] {
 html[data-theme="sunset"][data-mode="light"] {
   --theme-font-sans: "Poppins";
   --selection-color: rgb(136 19 55 / 0.20);
+  --now-gradient-a: rgb(190 24 93 / 0.24);
+  --now-gradient-b: rgb(194 65 12 / 0.2);
   --color-violet-400: #be123c;
   --color-violet-500: #9f1239;
   --color-violet-600: #881337;
@@ -271,6 +285,8 @@ html[data-theme="sunset"][data-mode="light"] {
 html[data-theme="forest"][data-mode="dark"] {
   --theme-font-sans: "Open Sans";
   --selection-color: rgb(34 197 94 / 0.30);
+  --now-gradient-a: rgb(34 197 94 / 0.33);
+  --now-gradient-b: rgb(16 185 129 / 0.22);
   --color-violet-400: #4ade80;
   --color-violet-500: #22c55e;
   --color-violet-600: #16a34a;
@@ -283,6 +299,8 @@ html[data-theme="forest"][data-mode="dark"] {
 html[data-theme="forest"][data-mode="light"] {
   --theme-font-sans: "Open Sans";
   --selection-color: rgb(20 83 45 / 0.20);
+  --now-gradient-a: rgb(22 163 74 / 0.23);
+  --now-gradient-b: rgb(15 118 110 / 0.18);
   --color-violet-400: #15803d;
   --color-violet-500: #166534;
   --color-violet-600: #14532d;
@@ -295,6 +313,8 @@ html[data-theme="forest"][data-mode="light"] {
 html[data-theme="neon"][data-mode="dark"] {
   --theme-font-sans: "Inter";
   --selection-color: rgb(14 165 233 / 0.30);
+  --now-gradient-a: rgb(59 130 246 / 0.34);
+  --now-gradient-b: rgb(34 211 238 / 0.24);
   --color-violet-400: #60a5fa;
   --color-violet-500: #3b82f6;
   --color-violet-600: #2563eb;
@@ -307,6 +327,8 @@ html[data-theme="neon"][data-mode="dark"] {
 html[data-theme="neon"][data-mode="light"] {
   --theme-font-sans: "Inter";
   --selection-color: rgb(30 58 138 / 0.20);
+  --now-gradient-a: rgb(29 78 216 / 0.24);
+  --now-gradient-b: rgb(14 116 144 / 0.18);
   --color-violet-400: #1d4ed8;
   --color-violet-500: #1e40af;
   --color-violet-600: #1e3a8a;
