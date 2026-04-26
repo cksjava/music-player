@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }): React.Reac
           <div
             key={t.id}
             className={cn(
-              "pointer-events-auto flex max-w-md items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl",
+              "pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl",
               t.kind === "error"
                 ? "border-red-500/25 bg-red-950/90 text-red-50"
                 : "border-zinc-700/80 bg-zinc-900/95 text-zinc-100"
