@@ -5,16 +5,37 @@ import { parseFile } from "music-metadata";
 import { nanoid } from "nanoid";
 
 const AUDIO_EXT = new Set([
-  ".flac",
+  // Lossy / streaming-friendly
+  ".aac",
+  ".ac3",
+  ".amr",
   ".m4a",
-  ".alac",
+  ".mp2",
   ".mp3",
   ".ogg",
+  ".oga",
   ".opus",
-  ".wav",
+  ".spx",
+  ".wma",
+  ".webm",
+  ".3gp",
+  ".3g2",
+  // Lossless / high quality
   ".aiff",
   ".aif",
+  ".alac",
+  ".ape",
+  ".flac",
+  ".mka",
+  ".tta",
+  ".wav",
   ".wv",
+  // Container aliases often holding audio tracks
+  ".asf",
+  ".m4b",
+  ".m4p",
+  ".mp4",
+  ".ra",
 ]);
 
 export interface ScanResult {
