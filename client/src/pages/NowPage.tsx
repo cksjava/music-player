@@ -4,12 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import {
   List,
   Pause,
+  Plus,
   Play,
   Repeat,
   RepeatOnce,
   Shuffle,
   SkipBack,
   SkipForward,
+  Minus,
   SpeakerHigh,
   MusicNotesPlus,
   SpeakerSlash,
@@ -366,6 +368,14 @@ export function NowPage(): ReactElement {
                   <SpeakerHigh size={22} weight="fill" />
                 )}
               </button>
+              <button
+                type="button"
+                onClick={() => void actions.setVolume(Math.max(0, Math.round(state?.volume ?? 0) - 5))}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-white/5 hover:text-white"
+                aria-label="Decrease volume"
+              >
+                <Minus size={18} weight="bold" />
+              </button>
               <input
                 type="range"
                 min={0}
@@ -375,6 +385,14 @@ export function NowPage(): ReactElement {
                 className="h-2 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800 accent-fuchsia-500"
                 aria-label="Volume"
               />
+              <button
+                type="button"
+                onClick={() => void actions.setVolume(Math.min(130, Math.round(state?.volume ?? 0) + 5))}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-white/5 hover:text-white"
+                aria-label="Increase volume"
+              >
+                <Plus size={18} weight="bold" />
+              </button>
               <span className="w-10 text-right text-xs font-semibold tabular-nums text-zinc-500">
                 {Math.round(state?.volume ?? 0)}
               </span>
