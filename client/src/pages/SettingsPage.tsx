@@ -18,6 +18,7 @@ import {
   WarningCircle,
   Trash,
   X,
+  Scroll,
 } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
@@ -82,6 +83,7 @@ export function SettingsPage(): ReactElement {
   const [path, setPath] = useState("");
   const [label, setLabel] = useState("");
   const [showLogs, setShowLogs] = useState(false);
+  const [showUpdateLog, setShowUpdateLog] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [pickerPath, setPickerPath] = useState("");
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm>(null);
@@ -102,6 +104,12 @@ export function SettingsPage(): ReactElement {
     refetchInterval: 5_000,
   });
 
+  const updateLogQ = useQuery({
+    queryKey: ["update-process-log"],
+    queryFn: () => musicApi.updateProcessLog(),
+    enabled: showUpdateLog,
+  });
+
   const pickerQ = useQuery({
     queryKey: ["fs-directories", pickerPath],
     queryFn: () => musicApi.browseDirectories(pickerPath || undefined),
@@ -116,9 +124,22 @@ export function SettingsPage(): ReactElement {
 
   useEffect(() => {
     const e =
-      sourcesQ.error ?? devicesQ.error ?? logsQ.error ?? pickerQ.error ?? updateStatusQ.error;
+      sourcesQ.error ??
+      devicesQ.error ??
+      logsQ.error ??
+      pickerQ.error ??
+      updateStatusQ.error ??
+      updateLogQ.error;
     if (e) toast((e as Error).message);
-  }, [sourcesQ.error, devicesQ.error, logsQ.error, pickerQ.error, updateStatusQ.error, toast]);
+  }, [
+    sourcesQ.error,
+    devicesQ.error,
+    logsQ.error,
+    pickerQ.error,
+    updateStatusQ.error,
+    updateLogQ.error,
+    toast,
+  ]);
 
   const addSource = useMutation({
     mutationFn: () =>
@@ -509,6 +530,14 @@ export function SettingsPage(): ReactElement {
           </button>
           <button
             type="button"
+            onClick={() => setShowUpdateLog(true)}
+            className="col-span-2 flex w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 py-2.5 text-left text-[13px] font-medium text-zinc-200 transition hover:border-indigo-500/30 hover:text-white"
+          >
+            <Scroll size={18} className="text-indigo-300" />
+            <span>Update process log</span>
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setPendingConfirm({
                 title: "Restart app",
@@ -679,6 +708,63 @@ export function SettingsPage(): ReactElement {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {showUpdateLog ? (
+        <div
+          className="fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowUpdateLog(false)}
+        >
+          <div
+            className="absolute inset-0 mx-auto flex h-full w-full layout-max flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-zinc-300">
+                <Scroll size={18} className="text-indigo-400" />
+                Update process log
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void qc.invalidateQueries({ queryKey: ["update-process-log"] })}
+                  disabled={updateLogQ.isFetching}
+                  className="rounded-lg border border-white/[0.1] bg-zinc-800/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-300 transition hover:text-white disabled:opacity-40"
+                >
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateLog(false)}
+                  className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
+                  aria-label="Close update log"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <p className="mb-2 break-all font-mono text-[10px] text-zinc-500">
+              {updateLogQ.data?.path ?? "…"}
+            </p>
+            {updateLogQ.data?.truncated ? (
+              <p className="mb-2 text-[11px] text-amber-200/90">
+                Log is large; only the most recent portion is shown.
+              </p>
+            ) : null}
+            {updateLogQ.isLoading ? (
+              <div className="h-28 animate-pulse rounded-xl bg-zinc-800/70" />
+            ) : updateLogQ.data?.missing ? (
+              <p className="rounded-xl bg-black/20 px-3 py-6 text-center text-sm text-zinc-500">
+                No update log yet. Run &quot;Update app&quot; to create{" "}
+                <span className="font-mono text-zinc-400">update-process.log</span>.
+              </p>
+            ) : (
+              <pre className="min-h-0 flex-1 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/[0.06] bg-black/30 p-3 font-mono text-[11px] leading-relaxed text-zinc-300">
+                {updateLogQ.data?.content ?? ""}
+              </pre>
             )}
           </div>
         </div>

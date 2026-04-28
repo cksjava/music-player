@@ -259,6 +259,14 @@ export const musicApi = {
   updateStatus: () =>
     api<{ update: UpdateStatus }>("/api/admin/system/update-status"),
 
+  updateProcessLog: () =>
+    api<{
+      path: string;
+      content: string;
+      missing: boolean;
+      truncated: boolean;
+    }>("/api/admin/system/update-log"),
+
   playlists: () => api<{ playlists: Playlist[] }>("/api/playlists"),
 
   createPlaylist: (name: string) =>

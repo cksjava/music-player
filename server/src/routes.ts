@@ -1,9 +1,11 @@
 import type { Express, Request, Response } from "express";
 import type Database from "better-sqlite3";
 import { execFile } from "node:child_process";
-import { appendFile, mkdir, readdir } from "node:fs/promises";
+import { appendFile, mkdir, readFile, readdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { unlink } from "node:fs/promises";
 import { dirname, join, normalize, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { z } from "zod";
 import { nanoid } from "nanoid";
@@ -14,12 +16,19 @@ import { clearErrorLogs, getErrorLogs, pushErrorLog } from "./services/error-log
 import type { PlayerService } from "./services/player.js";
 import type { Album, Artist, Playlist, Source, Track } from "./types.js";
 
+/** Monorepo root (parent of `server/`), derived from this file — not `process.cwd()` (systemd WorkingDirectory may be wrong). */
+function getMonorepoRoot(): string {
+  const here = dirname(fileURLToPath(import.meta.url));
+  return resolve(join(here, "..", ".."));
+}
+
 export function registerRoutes(
   app: Express,
   db: Database.Database,
   player: PlayerService
 ): void {
   const execFileAsync = promisify(execFile);
+  const monorepoRoot = getMonorepoRoot();
   const dataDir = process.env.DATA_DIR ?? join(process.cwd(), "server", "data");
   const artworkDir = join(dataDir, "artwork");
   const updateLogFile = join(dataDir, "update-process.log");
@@ -131,6 +140,42 @@ export function registerRoutes(
 
   app.get("/api/admin/system/update-status", (_req, res) => {
     res.json({ update: updateJob });
+  });
+
+  app.get("/api/admin/system/update-log", async (_req, res) => {
+    try {
+      if (!existsSync(updateLogFile)) {
+        res.json({
+          path: updateLogFile,
+          content: "",
+          missing: true as const,
+          truncated: false as const,
+        });
+        return;
+      }
+      const raw = await readFile(updateLogFile, "utf8");
+      const maxBytes = 512 * 1024;
+      let content = raw;
+      let truncated = false;
+      if (Buffer.byteLength(raw, "utf8") > maxBytes) {
+        truncated = true;
+        let slice = raw;
+        while (Buffer.byteLength(slice, "utf8") > maxBytes && slice.length > 0) {
+          slice = slice.slice(Math.floor(slice.length / 2));
+        }
+        content = `… (showing tail of log)\n${slice}`;
+      }
+      res.json({
+        path: updateLogFile,
+        content,
+        missing: false as const,
+        truncated,
+      });
+    } catch (e) {
+      const msg = (e as Error).message;
+      pushErrorLog("system", "failed to read update-process.log", msg);
+      res.status(500).json({ error: msg });
+    }
   });
 
   app.get("/api/fs/directories", async (req, res) => {
@@ -810,7 +855,13 @@ export function registerRoutes(
     }
     res.status(202).json({ ok: true, message: "App update requested" });
     setTimeout(async () => {
-      const cwd = process.cwd();
+      /**
+       * Must be the repo root where root `package.json` + workspaces live.
+       * Using `process.cwd()` breaks updates when systemd sets WorkingDirectory to
+       * `server/` or elsewhere: `npm run build` then only runs `tsc`, not `vite`, so
+       * `client/dist` never refreshes and the UI stays stale forever.
+       */
+      const cwd = monorepoRoot;
       const runId = `run-${Date.now()}`;
       updateJob.status = "running";
       updateJob.startedAt = Date.now();
@@ -863,8 +914,15 @@ export function registerRoutes(
         }
       };
       try {
+        const rootPkg = join(cwd, "package.json");
+        const clientDist = join(cwd, "client", "dist");
+        if (!existsSync(rootPkg)) {
+          throw new Error(
+            `Cannot update: missing ${rootPkg}. Monorepo root resolved to ${cwd} (process.cwd() was ${process.cwd()}).`
+          );
+        }
         await appendUpdateLog(
-          `[${new Date().toISOString()}] [${runId}] UPDATE START\n  cwd: ${cwd}`
+          `[${new Date().toISOString()}] [${runId}] UPDATE START\n  update cwd (monorepo root): ${cwd}\n  process.cwd(): ${process.cwd()}\n  root package.json: ${existsSync(rootPkg) ? "yes" : "no"}\n  client/dist exists (before): ${existsSync(clientDist) ? "yes" : "no"}`
         );
         updateJob.step = "stop-playback";
         pushErrorLog("system", "update step started: stop-playback", "Stopping playback before update");
