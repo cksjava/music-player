@@ -246,7 +246,7 @@ export function SettingsPage(): ReactElement {
   const isUpdateIdle = !updateStatus || updateStatus.status === "idle";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <div className="layout-page">
       <PageHeader
         title="System"
         subtitle="Library folders, output, and rescans"
@@ -619,7 +619,7 @@ export function SettingsPage(): ReactElement {
           onClick={() => setShowLogs(false)}
         >
           <div
-            className="absolute inset-0 mx-auto flex h-full w-full max-w-2xl flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
+            className="absolute inset-0 mx-auto flex h-full w-full layout-max flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
@@ -690,7 +690,7 @@ export function SettingsPage(): ReactElement {
           onClick={() => setShowPicker(false)}
         >
           <div
-            className="absolute inset-0 mx-auto flex h-full w-full max-w-2xl flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
+            className="absolute inset-0 mx-auto flex h-full w-full layout-max flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">

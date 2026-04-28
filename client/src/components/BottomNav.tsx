@@ -17,7 +17,7 @@ export function BottomNav(): ReactElement {
       className="safe-pb fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] bg-zinc-950/85 backdrop-blur-2xl"
       aria-label="Primary"
     >
-      <div className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1">
+      <div className="mx-auto flex layout-chrome-inner items-stretch justify-around px-1 pt-1">
         {items.map(({ to, label, Icon }) => (
           <NavLink
             key={to}

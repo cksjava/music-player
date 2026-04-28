@@ -63,13 +63,11 @@ export function AlbumPage(): ReactElement {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <div className="layout-page">
       <PageHeader
-        title={album?.title ?? "Album"}
-        subtitle={album?.artistName ?? " "}
         backTo="/library"
         right={
-          ids.length ? (
+          album && ids.length > 0 ? (
             <div className="flex gap-1">
               <button
                 type="button"
@@ -83,7 +81,7 @@ export function AlbumPage(): ReactElement {
                 type="button"
                 onClick={() => void playAll(true)}
                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-200 transition hover:border-violet-500/40 hover:text-white active:scale-95"
-                aria-label="Shuffle"
+                aria-label="Shuffle album"
               >
                 <Shuffle size={20} />
               </button>

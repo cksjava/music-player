@@ -368,6 +368,25 @@ html[data-theme="neon"][data-mode="light"] {
   }
 }
 
+/* Fluid width on tablet landscape / desktop; phones stay comfortably narrow */
+@layer components {
+  .layout-max {
+    @apply w-full max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl;
+  }
+  .layout-page {
+    @apply mx-auto w-full max-w-2xl px-4 sm:px-6 md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl;
+  }
+  .layout-now {
+    @apply mx-auto w-full max-w-lg px-4 pb-4 sm:px-6 md:max-w-3xl lg:max-w-5xl xl:max-w-6xl;
+  }
+  .layout-now-max {
+    @apply w-full max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl;
+  }
+  .layout-chrome-inner {
+    @apply w-full max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl;
+  }
+}
+
 @utility safe-pb {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
 }

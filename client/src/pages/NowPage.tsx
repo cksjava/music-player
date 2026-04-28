@@ -20,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { AddToPlaylistDialog } from "../components/AddToPlaylistDialog";
+import { BlitzLogo } from "../components/BlitzLogo";
 import { formatMs } from "../lib/format";
 import { cn } from "../lib/cn";
 import { usePlayerActions, usePlayerState } from "../hooks/usePlayer";
@@ -102,8 +103,10 @@ export function NowPage(): ReactElement {
   }, [state?.repeat]);
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col px-4 pb-4 sm:px-6">
-      <div className="pointer-events-none fixed inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-[70] mx-auto flex w-full max-w-lg justify-end gap-2 px-4 sm:px-6">
+    <div className="layout-now flex flex-col">
+      <div className="pointer-events-none fixed inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-[70] mx-auto flex layout-now-max items-start justify-between gap-2 px-4 sm:px-6">
+        <BlitzLogo size="header" className="pointer-events-auto shrink-0 pt-0.5" />
+        <div className="pointer-events-auto flex shrink-0 gap-2">
         <button
           type="button"
           onClick={() => {
@@ -145,6 +148,7 @@ export function NowPage(): ReactElement {
           <List size={20} />
           <span className="text-xs font-semibold text-zinc-400">{queueIds.length}</span>
         </button>
+        </div>
       </div>
 
       <div className="relative mb-6 mt-1 overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-zinc-800/80 to-zinc-950 shadow-2xl ring-1 ring-white/[0.04]">
@@ -281,7 +285,7 @@ export function NowPage(): ReactElement {
           onClick={() => setShowQueue(false)}
         >
           <div
-            className="absolute inset-0 mx-auto flex h-full w-full max-w-lg flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
+            className="absolute inset-0 mx-auto flex h-full w-full layout-now-max flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">

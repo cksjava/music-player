@@ -32,7 +32,7 @@ export function PlaylistsPage(): ReactElement {
   const playlists = data?.playlists ?? [];
 
   return (
-    <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <div className="layout-page">
       <PageHeader title="Playlists" subtitle="Curated queues for any mood" />
       <form
         className="mb-6 flex gap-2"

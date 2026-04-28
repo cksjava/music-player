@@ -37,7 +37,7 @@ export function AddToPlaylistDialog(props: {
   return (
     <div className="fixed inset-0 z-[95] bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="absolute inset-0 mx-auto flex h-full w-full max-w-lg flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
+        className="absolute inset-0 mx-auto flex h-full w-full layout-chrome-inner flex-col border-x border-white/[0.08] bg-zinc-950 p-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">

@@ -81,7 +81,7 @@ export function PlaylistPage(): ReactElement {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <div className="layout-page">
       <PageHeader
         title={pl?.name ?? "Playlist"}
         subtitle={`${tracks.length} tracks`}

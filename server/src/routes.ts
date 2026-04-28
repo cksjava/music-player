@@ -456,9 +456,12 @@ export function registerRoutes(
     res.json(row);
   });
 
+  /** Large enough for a full library view on a local Pi; client may paginate if needed. */
+  const MAX_LIBRARY_PAGE = 10_000;
+
   app.get("/api/albums", (req, res) => {
     const q = (req.query.q as string) || "";
-    const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit), 10) || 80));
+    const limit = Math.min(MAX_LIBRARY_PAGE, Math.max(1, parseInt(String(req.query.limit), 10) || 80));
     const offset = Math.max(0, parseInt(String(req.query.offset), 10) || 0);
     const where = q
       ? `WHERE a.title LIKE ? OR ar.name LIKE ?`
@@ -526,7 +529,7 @@ export function registerRoutes(
 
   app.get("/api/artists", (req, res) => {
     const q = (req.query.q as string) || "";
-    const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit), 10) || 80));
+    const limit = Math.min(MAX_LIBRARY_PAGE, Math.max(1, parseInt(String(req.query.limit), 10) || 80));
     const offset = Math.max(0, parseInt(String(req.query.offset), 10) || 0);
     const where = q ? `WHERE ar.name LIKE ?` : "";
     const like = `%${q.replace(/%/g, "")}%`;

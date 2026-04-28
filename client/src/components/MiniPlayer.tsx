@@ -27,7 +27,7 @@ export function MiniPlayer(): ReactElement | null {
       <Link
         to="/now"
         className={cn(
-          "mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-white/[0.08] bg-zinc-900/90 p-2.5 shadow-xl shadow-black/40 backdrop-blur-xl transition hover:border-violet-500/25 hover:bg-zinc-900"
+          "mx-auto flex layout-chrome-inner items-center gap-3 rounded-2xl border border-white/[0.08] bg-zinc-900/90 p-2.5 shadow-xl shadow-black/40 backdrop-blur-xl transition hover:border-violet-500/25 hover:bg-zinc-900"
         )}
       >
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-violet-600/40 to-fuchsia-600/30 ring-1 ring-white/10">

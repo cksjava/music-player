@@ -57,7 +57,7 @@ export function AudioCdPage(): ReactElement {
   const tracks = cdQ.data?.tracks ?? [];
 
   return (
-    <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <div className="layout-page">
       <PageHeader title="Audio CD" subtitle="Play or eject the disc in your drive" />
       <div className="mb-5 rounded-2xl border border-white/[0.06] bg-zinc-900/55 p-4">
         <div className="mb-4 flex items-center gap-3 text-zinc-300">

@@ -30,7 +30,7 @@ export function ConfirmDialog(props: {
   return (
     <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm" onClick={onCancel}>
       <div
-        className="absolute inset-0 mx-auto flex h-full w-full max-w-lg items-center px-4"
+        className="absolute inset-0 mx-auto flex h-full w-full layout-chrome-inner items-center px-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full rounded-2xl border border-white/[0.08] bg-zinc-950 p-4 shadow-2xl">
