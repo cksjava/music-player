@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Broom,
@@ -230,6 +230,20 @@ export function SettingsPage(): ReactElement {
   const devices = devicesQ.data?.devices ?? [];
   const currentDev = playerData?.state.audioDevice ?? "";
 
+  const deviceOptions = useMemo(() => {
+    const list = [...devices];
+    if (
+      currentDev &&
+      currentDev !== "auto" &&
+      !list.some((d) => d.id === currentDev)
+    ) {
+      list.push({ id: currentDev, name: `Saved choice (${currentDev})` });
+    }
+    return list;
+  }, [devices, currentDev]);
+
+  const [audioApplying, setAudioApplying] = useState(false);
+
   const resetLibrary = useMutation({
     mutationFn: () =>
       musicApi.resetLibrary({ stopPlayback: true }),
@@ -368,46 +382,63 @@ export function SettingsPage(): ReactElement {
           Audio output
         </h2>
         <p className="mb-3 text-sm leading-relaxed text-zinc-400">
-          Pick the IQAudio DAC or another ALSA device on the Pi. On macOS you will see
-          CoreAudio devices from mpv.
+          Output devices come from mpv (ALSA on Raspberry Pi). Duplicate ALSA entries for the same
+          hardware are collapsed when the label matches (plughw is preferred). Choose one entry,
+          then start or resume playback—sound switches immediately when possible.
         </p>
-        <div className="space-y-2">
+        <div className="relative flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-3 sm:p-4">
+          <SpeakerHigh
+            size={22}
+            className="mt-0.5 shrink-0 text-violet-400"
+            weight="duotone"
+          />
           {devicesQ.isLoading ? (
-            <div className="h-24 animate-pulse rounded-2xl bg-zinc-800/80" />
+            <div className="h-11 flex-1 animate-pulse rounded-xl bg-zinc-800/80" />
           ) : (
-            devices.map((d) => {
-              const active =
-                d.id === currentDev ||
-                (!currentDev && d.id === "auto") ||
-                (currentDev === "" && d.id === "auto");
-              return (
-                <button
-                  key={d.id}
-                  type="button"
-                  onClick={() =>
-                    void setDevice(d.id === "auto" ? null : d.id).catch((e) =>
-                      toast((e as Error).message)
-                    )
-                  }
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
-                    active
-                      ? "border-violet-500/50 bg-violet-500/10 text-white"
-                      : "border-white/[0.06] bg-zinc-900/50 text-zinc-300 hover:border-white/10"
-                  )}
-                >
-                  <SpeakerHigh
-                    size={22}
-                    weight={active ? "fill" : "regular"}
-                    className={cn(active ? "text-violet-400" : "text-zinc-500")}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{d.name || d.id}</p>
-                    <p className="truncate font-mono text-[11px] text-zinc-500">{d.id}</p>
-                  </div>
-                </button>
-              );
-            })
+            <div className="min-w-0 flex-1 space-y-2">
+              <label htmlFor="audio-output-device" className="sr-only">
+                Audio output device
+              </label>
+              <select
+                id="audio-output-device"
+                disabled={audioApplying}
+                value={
+                  !currentDev || currentDev === "auto" ? "auto" : currentDev
+                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  void (async () => {
+                    setAudioApplying(true);
+                    try {
+                      await setDevice(v === "auto" ? null : v);
+                    } catch (err) {
+                      toast((err as Error).message);
+                    } finally {
+                      setAudioApplying(false);
+                    }
+                  })();
+                }}
+                className={cn(
+                  "w-full appearance-none rounded-xl border border-white/[0.1] bg-zinc-950/80 py-3 pl-3 pr-10 text-sm font-medium text-white outline-none transition",
+                  "focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20",
+                  "disabled:cursor-wait disabled:opacity-60",
+                  "bg-[length:1rem] bg-[right_0.65rem_center] bg-no-repeat",
+                  "[background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a1a1aa'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")]"
+                )}
+              >
+                {deviceOptions.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.id === "auto"
+                      ? d.name
+                      : `${d.name} — ${d.id}`}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] leading-snug text-zinc-500">
+                If you hear nothing after switching, try another entry for the same DAC or use
+                Automatic and let mpv choose.
+              </p>
+            </div>
           )}
         </div>
       </section>

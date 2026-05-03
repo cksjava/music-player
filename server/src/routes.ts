@@ -10,7 +10,7 @@ import { promisify } from "node:util";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { scanSource } from "./services/indexer.js";
-import { listMpvAudioDevices } from "./services/devices.js";
+import { dedupeAudioDevicesForUi, listMpvAudioDevices } from "./services/devices.js";
 import { ejectAudioCd, readAudioCdInfo, resolvedCdRomDevice } from "./services/cd.js";
 import { clearErrorLogs, getErrorLogs, pushErrorLog } from "./services/error-log.js";
 import type { PlayerService } from "./services/player.js";
@@ -215,7 +215,8 @@ export function registerRoutes(
 
   app.get("/api/devices", async (_req, res) => {
     try {
-      const devices = await listMpvAudioDevices();
+      const raw = await listMpvAudioDevices();
+      const devices = dedupeAudioDevicesForUi(raw);
       res.json({ devices });
     } catch (e) {
       const msg = (e as Error).message;

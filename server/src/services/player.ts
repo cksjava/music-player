@@ -472,11 +472,37 @@ export class PlayerService {
   }
 
   async setAudioDevice(device: string | null): Promise<void> {
+    const prevTrackId = this.state.trackId;
+    const wasPlaying = this.state.status === "playing";
+    const resumePlayback = this.state.status === "playing" || this.state.status === "paused";
+
     this.state.audioDevice = device;
     this.persist("audio_device", device ?? "");
-    this.started = false;
-    await this.mpv.stop();
+
     await this.ensureStarted();
+    if (this.state.error) return;
+
+    const target =
+      device && device !== "auto" ? device : "auto";
+
+    try {
+      await this.mpv.setProp("audio-device", target);
+    } catch (e) {
+      pushErrorLog(
+        "playback",
+        "set audio-device failed; restarting mpv",
+        (e as Error).message
+      );
+      this.started = false;
+      await this.mpv.stop();
+      await this.ensureStarted();
+      if (this.state.error) return;
+      // New process already started with --audio-device from ensureStarted + persisted state.
+    }
+
+    if (prevTrackId && resumePlayback) {
+      await this.loadTrackById(prevTrackId, wasPlaying);
+    }
   }
 
   async shutdown(): Promise<void> {

@@ -43,3 +43,53 @@ function parseMpvAudioDeviceHelp(text: string): AudioDevice[] {
   }
   return out;
 }
+
+/**
+ * mpv lists many ALSA aliases per physical card (hw, plughw, surround…). Group by the
+ * human-readable name and prefer plughw (sample-rate conversion) over raw hw when names match.
+ */
+export function dedupeAudioDevicesForUi(devices: AudioDevice[]): AudioDevice[] {
+  const auto = devices.find((d) => d.id === "auto");
+  const rest = devices.filter((d) => d.id !== "auto");
+  const normName = (name: string): string =>
+    name.replace(/\s+/g, " ").trim().toLowerCase();
+
+  const groups = new Map<string, AudioDevice[]>();
+  for (const d of rest) {
+    const key = normName(d.name);
+    const list = groups.get(key) ?? [];
+    list.push(d);
+    groups.set(key, list);
+  }
+
+  const rankId = (id: string): number => {
+    if (/plughw/i.test(id)) return 0;
+    if (/^alsa\/default$/i.test(id)) return 1;
+    if (/^alsa\/dmix/i.test(id)) return 2;
+    if (/^alsa\/surround/i.test(id)) return 3;
+    if (/^alsa\/hw/i.test(id)) return 4;
+    return 5;
+  };
+
+  const firstIdx = new Map<string, number>();
+  rest.forEach((d, i) => {
+    if (!firstIdx.has(d.id)) firstIdx.set(d.id, i);
+  });
+
+  const picked: AudioDevice[] = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      picked.push(group[0]);
+      continue;
+    }
+    const sorted = [...group].sort((a, b) => rankId(a.id) - rankId(b.id));
+    picked.push(sorted[0]);
+  }
+
+  picked.sort((a, b) => (firstIdx.get(a.id) ?? 0) - (firstIdx.get(b.id) ?? 0));
+
+  const out: AudioDevice[] = [];
+  if (auto) out.push(auto);
+  out.push(...picked);
+  return out;
+}
