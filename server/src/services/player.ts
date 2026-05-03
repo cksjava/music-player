@@ -18,6 +18,8 @@ export class PlayerService {
   /** Prevents double queue advance when both `end-file` and `eof-reached` fire. */
   private trackEndInFlight = false;
   private cdTracksById = new Map<string, Track & { path: string }>();
+  /** Tracks on current Audio CD (TOC count); used to bound each chapter for sane mpv time-pos/duration. */
+  private cdChapterCount = 0;
 
   constructor(
     private readonly db: Database.Database,
@@ -248,6 +250,7 @@ export class PlayerService {
 
   setQueue(trackIds: string[], startIndex = 0): void {
     this.cdTracksById.clear();
+    this.cdChapterCount = 0;
     this.state.queue = [...trackIds];
     this.state.queueIndex = Math.max(
       0,
@@ -260,6 +263,7 @@ export class PlayerService {
     startIndex = 0
   ): void {
     this.cdTracksById.clear();
+    this.cdChapterCount = tracks.length;
     const ids = tracks.map((t) => {
       const id = `cd:${t.trackNumber}`;
       this.cdTracksById.set(id, {
@@ -348,12 +352,22 @@ export class PlayerService {
     try {
       if (virtual) {
         const url = cddaMpvBaseUrl();
-        const opts = `start=#${virtual.trackNumber}`;
+        const n = virtual.trackNumber ?? 1;
+        // Load a single disc chapter (track) with an upper bound. Otherwise mpv's time-pos is often
+        // disc-global (large) while the UI uses per-track TOC duration — the progress bar breaks and
+        // can look like it moves right-to-left. end=#(N+1) stops at the next chapter (mpv manual).
+        const withBounds =
+          this.cdChapterCount > 0 && n < this.cdChapterCount
+            ? `start=#${n},end=#${n + 1}`
+            : `start=#${n}`;
         try {
-          // mpv 0.38+: per-file options are the 5th arg; third must be -1 (see mpv loadfile docs).
-          await this.mpv.command("loadfile", url, "replace", -1, opts);
+          await this.mpv.command("loadfile", url, "replace", -1, withBounds);
         } catch {
-          await this.mpv.command("loadfile", url, "replace", opts);
+          try {
+            await this.mpv.command("loadfile", url, "replace", -1, `start=#${n}`);
+          } catch {
+            await this.mpv.command("loadfile", url, "replace", `start=#${n}`);
+          }
         }
       } else {
         await this.mpv.command("loadfile", row.path, "replace");
