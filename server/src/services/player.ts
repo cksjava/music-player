@@ -4,16 +4,10 @@ import type Database from "better-sqlite3";
 import type { PlayerState, Track } from "../types.js";
 import { MpvIpc, type MpvEvent } from "./mpv.js";
 import { pushErrorLog } from "./error-log.js";
+import { cddaMpvBaseUrl } from "./cd.js";
 
 function defaultSocketPath(): string {
   return join(tmpdir(), "music-player-mpv.sock");
-}
-
-function audioCdPath(trackNumber: number): string {
-  const device = process.env.CDROM_DEVICE?.trim();
-  if (!device) return `cdda://${trackNumber}`;
-  // mpv cdda URL format supports appending device path as /device.
-  return `cdda://${trackNumber}/${device}`;
 }
 
 export class PlayerService {
@@ -270,7 +264,7 @@ export class PlayerService {
       const id = `cd:${t.trackNumber}`;
       this.cdTracksById.set(id, {
         id,
-        path: audioCdPath(t.trackNumber),
+        path: cddaMpvBaseUrl(),
         title: t.title,
         discNumber: 1,
         trackNumber: t.trackNumber,
@@ -352,7 +346,18 @@ export class PlayerService {
     this.state.positionMs = 0;
     this.state.durationMs = null;
     try {
-      await this.mpv.command("loadfile", row.path, "replace");
+      if (virtual) {
+        const url = cddaMpvBaseUrl();
+        const opts = `start=#${virtual.trackNumber}`;
+        try {
+          // mpv 0.38+: per-file options are the 5th arg; third must be -1 (see mpv loadfile docs).
+          await this.mpv.command("loadfile", url, "replace", -1, opts);
+        } catch {
+          await this.mpv.command("loadfile", url, "replace", opts);
+        }
+      } else {
+        await this.mpv.command("loadfile", row.path, "replace");
+      }
       if (!autoplay) await this.mpv.setProp("pause", true);
       else await this.mpv.setProp("pause", false);
       this.state.status = autoplay ? "playing" : "paused";

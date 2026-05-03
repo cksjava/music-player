@@ -57,11 +57,9 @@ fi
 echo "==> Node: $(node -v)"
 echo "==> npm:  $(npm -v)"
 
-echo "==> Installing npm dependencies (including dev tools like tsc)"
-npm ci --include=dev --workspaces
-
-echo "==> Building client and server"
-npm run build
+echo "==> npm ci + build (lockfile-pinned install; see scripts/pi-npm-ci-and-build.sh)"
+chmod +x "${SCRIPT_DIR}/scripts/pi-npm-ci-and-build.sh"
+"${SCRIPT_DIR}/scripts/pi-npm-ci-and-build.sh"
 
 cat <<'EOF'
 

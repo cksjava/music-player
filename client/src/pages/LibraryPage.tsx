@@ -1,17 +1,16 @@
 import type { ReactElement, RefObject } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Disc, UsersThree } from "@phosphor-icons/react";
+import { Disc, MagnifyingGlass, UsersThree } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
-import { LibrarySearchOverlay } from "../components/LibrarySearchOverlay";
 import { PageHeader } from "../components/PageHeader";
 import { cn } from "../lib/cn";
 import { useToast } from "../context/ToastContext";
 
 type Tab = "albums" | "artists";
 
-/** Per request; server caps at MAX_LIBRARY_PAGE. Album search lives in LibrarySearchOverlay. */
+/** Per request; server caps at MAX_LIBRARY_PAGE. Search uses the same q on every page (full DB). */
 const PAGE_SIZE = 48;
 
 function useLoadMoreOnIntersect(
@@ -51,15 +50,18 @@ function useLoadMoreOnIntersect(
 export function LibraryPage(): ReactElement {
   const toast = useToast();
   const [tab, setTab] = useState<Tab>("albums");
+  const [q, setQ] = useState("");
   const [artworkErrors, setArtworkErrors] = useState<Record<string, boolean>>({});
+  const dq = useDeferredValue(q.trim());
 
   const albumsSentinelRef = useRef<HTMLDivElement>(null);
   const artistsSentinelRef = useRef<HTMLDivElement>(null);
 
   const albumsQ = useInfiniteQuery({
-    queryKey: ["albums", "paged"],
+    queryKey: ["albums", dq, "paged"],
     queryFn: ({ pageParam }) =>
       musicApi.albums({
+        q: dq || undefined,
         limit: PAGE_SIZE,
         offset: pageParam,
       }),
@@ -72,9 +74,10 @@ export function LibraryPage(): ReactElement {
   });
 
   const artistsQ = useInfiniteQuery({
-    queryKey: ["artists", "paged"],
+    queryKey: ["artists", dq, "paged"],
     queryFn: ({ pageParam }) =>
       musicApi.artists({
+        q: dq || undefined,
         limit: PAGE_SIZE,
         offset: pageParam,
       }),
@@ -120,36 +123,46 @@ export function LibraryPage(): ReactElement {
   const artistsInitialLoading = artistsQ.isPending && artists.length === 0;
 
   return (
-    <>
     <div className="layout-page">
       <PageHeader title="Library" subtitle="Albums & artists on this Pi" />
-      <div className="mb-5 flex rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-1">
-        <button
-          type="button"
-          onClick={() => setTab("albums")}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition",
-            tab === "albums"
-              ? "bg-white/[0.08] text-white shadow-sm"
-              : "text-zinc-500 hover:text-zinc-300"
-          )}
-        >
-          <Disc size={20} weight={tab === "albums" ? "fill" : "regular"} />
-          Albums
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("artists")}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition",
-            tab === "artists"
-              ? "bg-white/[0.08] text-white shadow-sm"
-              : "text-zinc-500 hover:text-zinc-300"
-          )}
-        >
-          <UsersThree size={20} weight={tab === "artists" ? "fill" : "regular"} />
-          Artists
-        </button>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex shrink-0 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-1">
+          <button
+            type="button"
+            onClick={() => setTab("albums")}
+            className={cn(
+              "flex h-11 w-11 items-center justify-center rounded-xl transition",
+              tab === "albums"
+                ? "bg-white/[0.08] text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-300"
+            )}
+            aria-label="Show albums"
+          >
+            <Disc size={20} weight={tab === "albums" ? "fill" : "regular"} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("artists")}
+            className={cn(
+              "flex h-11 w-11 items-center justify-center rounded-xl transition",
+              tab === "artists"
+                ? "bg-white/[0.08] text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-300"
+            )}
+            aria-label="Show artists"
+          >
+            <UsersThree size={20} weight={tab === "artists" ? "fill" : "regular"} />
+          </button>
+        </div>
+        <label className="flex min-h-[3rem] min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/[0.08] bg-zinc-900/60 px-4 py-3 shadow-inner ring-1 ring-black/20 focus-within:border-violet-500/40 focus-within:ring-violet-500/20">
+          <MagnifyingGlass className="shrink-0 text-zinc-500" size={22} />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search albums, artists..."
+            className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-zinc-600"
+          />
+        </label>
       </div>
 
       {tab === "albums" ? (
@@ -247,7 +260,5 @@ export function LibraryPage(): ReactElement {
         </>
       )}
     </div>
-    <LibrarySearchOverlay />
-    </>
   );
 }

@@ -15,6 +15,21 @@ export interface AudioCdInfo {
   tracks: AudioCdTrack[];
 }
 
+/** Same default as CD TOC queries (`readAudioCdInfo`) so mpv opens the same drive as cdparanoia. */
+export function resolvedCdRomDevice(): string {
+  return process.env.CDROM_DEVICE?.trim() || "/dev/sr0";
+}
+
+/**
+ * mpv protocol: `cdda://[device]` — optional drive path only. Track selection is via per-file
+ * `start=#N` / `end=#N` (chapters), not path segments.
+ */
+export function cddaMpvBaseUrl(device = resolvedCdRomDevice()): string {
+  const d = device.trim();
+  if (!d) return "cdda://";
+  return d.startsWith("/") ? `cdda://${d}` : `cdda://${d}`;
+}
+
 export async function readAudioCdInfo(device: string): Promise<AudioCdInfo> {
   try {
     const { stdout, stderr } = await execFileAsync("cdparanoia", ["-d", device, "-Q"]);

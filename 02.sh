@@ -34,6 +34,8 @@ APP_USER="${SUDO_USER:-$USER}"
 APP_GROUP="$(id -gn "${APP_USER}")"
 APP_DIR="${SCRIPT_DIR}"
 SERVICE_NAME="music-player.service"
+STALE_BUILD_UNIT="music-player-build.service"
+CI_BUILD_SCRIPT="${APP_DIR}/scripts/pi-npm-ci-and-build.sh"
 CDROM_DEVICE="${CDROM_DEVICE:-/dev/sr0}"
 SYSTEMCTL_BIN="$(command -v systemctl || true)"
 SHUTDOWN_BIN="$(command -v shutdown || true)"
@@ -127,7 +129,13 @@ else
   echo "==> IQaudIO-like card not detected via aplay. Leaving existing /etc/asound.conf unchanged."
 fi
 
-echo "==> Creating systemd service at /etc/systemd/system/${SERVICE_NAME}"
+chmod +x "${CI_BUILD_SCRIPT}"
+
+echo "==> Removing legacy split build unit (if present)"
+sudo systemctl disable --now "${STALE_BUILD_UNIT}" 2>/dev/null || true
+sudo rm -f "/etc/systemd/system/${STALE_BUILD_UNIT}"
+
+echo "==> Creating systemd unit: ${SERVICE_NAME} (npm ci + build as ExecStartPre, then node)"
 sudo tee "/etc/systemd/system/${SERVICE_NAME}" >/dev/null <<EOF
 [Unit]
 Description=Music Player App Server
@@ -144,9 +152,13 @@ Environment=NODE_ENV=production
 Environment=PORT=3847
 Environment=MPV_AO=alsa
 Environment=CDROM_DEVICE=${CDROM_DEVICE}
+# Runs before every start (boot and systemctl restart). Same as: one command redeploys.
+# Tradeoff: crash recovery (Restart=always) also re-runs npm ci + build — slower recovery.
+ExecStartPre=/usr/bin/bash ${CI_BUILD_SCRIPT}
 ExecStart=/usr/bin/npm run start
 Restart=always
 RestartSec=3
+TimeoutStartSec=0
 
 [Install]
 WantedBy=multi-user.target
@@ -167,7 +179,7 @@ SUDOERS_PATH="/etc/sudoers.d/music-player"
 TMP_SUDOERS="$(mktemp)"
 cat > "${TMP_SUDOERS}" <<EOF
 # Managed by 02.sh for music-player maintenance APIs.
-${APP_USER} ALL=(root) NOPASSWD: ${SYSTEMCTL_BIN} restart ${SERVICE_NAME}, ${SHUTDOWN_BIN} -h now
+${APP_USER} ALL=(root) NOPASSWD: ${SYSTEMCTL_BIN} restart ${SERVICE_NAME}, ${SHUTDOWN_BIN} -h now, ${SHUTDOWN_BIN} -r now
 EOF
 
 if sudo test -f "${SUDOERS_PATH}" && sudo cmp -s "${TMP_SUDOERS}" "${SUDOERS_PATH}"; then
@@ -190,6 +202,10 @@ Next:
        systemctl status ${SERVICE_NAME}
   3) Access app from another device on LAN:
        http://${HOSTNAME_TARGET}.local:3847
+
+After git pull, one command reinstalls deps, rebuilds, and restarts the server:
+     sudo systemctl restart ${SERVICE_NAME}
+  (ExecStartPre runs npm ci + npm run build each time — including crash restarts.)
 
 If the audio card is still not first device after reboot, run:
   aplay -l

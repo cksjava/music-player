@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Broom,
   ArrowsClockwise,
+  CaretDown,
   DownloadSimple,
   FolderOpen,
   HardDrives,
@@ -78,6 +79,18 @@ export function SettingsPage(): ReactElement {
   const { theme, mode, setTheme, setMode, themeOptions } = useTheme();
   const qc = useQueryClient();
   const { data: playerData } = usePlayerState();
+  const [powerMenuOpen, setPowerMenuOpen] = useState(false);
+  const powerMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!powerMenuOpen) return;
+    const close = (e: MouseEvent): void => {
+      const el = powerMenuRef.current;
+      if (el && !el.contains(e.target as Node)) setPowerMenuOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [powerMenuOpen]);
   const { setDevice, stop } = usePlayerActions();
 
   const [path, setPath] = useState("");
@@ -240,6 +253,14 @@ export function SettingsPage(): ReactElement {
     mutationFn: () => musicApi.shutdownDevice(),
     onSuccess: () => {
       toast("Shutdown requested. The Raspberry Pi will power off shortly.", "info");
+    },
+    onError: (err: Error) => toast(err.message),
+  });
+
+  const restartDevice = useMutation({
+    mutationFn: () => musicApi.restartDevice(),
+    onSuccess: () => {
+      toast("Restart requested. The device will reboot shortly.", "info");
     },
     onError: (err: Error) => toast(err.message),
   });
@@ -620,24 +641,90 @@ export function SettingsPage(): ReactElement {
             <Broom size={17} className="text-amber-300" />
             <span>Clean Library</span>
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setPendingConfirm({
-                title: "Shut down device",
-                message:
-                  "Shut down this Raspberry Pi now? You will need to power it on manually.",
-                confirmLabel: "Shut down",
-                tone: "danger",
-                action: () => shutdownDevice.mutate(),
-              });
-            }}
-            disabled={shutdownDevice.isPending}
-            className="flex w-full items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-red-100 transition hover:bg-red-500/15 disabled:opacity-50"
+          <div
+            ref={powerMenuRef}
+            className={cn(
+              "flex w-full overflow-visible rounded-lg border border-red-500/30 bg-red-500/10",
+              shutdownDevice.isPending || restartDevice.isPending ? "opacity-50" : ""
+            )}
           >
-            <Power size={17} className="text-red-300" />
-            <span>Shut Down</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPowerMenuOpen(false);
+                setPendingConfirm({
+                  title: "Shut down device",
+                  message:
+                    "Shut down this Raspberry Pi now? You will need to power it on manually.",
+                  confirmLabel: "Shut down",
+                  tone: "danger",
+                  action: () => shutdownDevice.mutate(),
+                });
+              }}
+              disabled={shutdownDevice.isPending || restartDevice.isPending}
+              className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 text-left text-[13px] font-medium text-red-100 transition hover:bg-red-500/15 disabled:pointer-events-none"
+            >
+              <Power size={17} className="shrink-0 text-red-300" />
+              <span className="truncate">Shut down</span>
+            </button>
+            <div className="relative shrink-0 self-stretch border-l border-red-500/25">
+              <button
+                type="button"
+                aria-expanded={powerMenuOpen}
+                aria-haspopup="menu"
+                aria-label="More power options"
+                onClick={() => setPowerMenuOpen((o) => !o)}
+                disabled={shutdownDevice.isPending || restartDevice.isPending}
+                className="flex h-full items-center px-2.5 text-red-200 transition hover:bg-red-500/15 disabled:pointer-events-none"
+              >
+                <CaretDown size={16} weight="bold" className="text-red-300" />
+              </button>
+              {powerMenuOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-[calc(100%+4px)] z-[80] min-w-[11.5rem] rounded-xl border border-white/[0.1] bg-zinc-900/95 py-1 shadow-xl shadow-black/40 backdrop-blur-xl"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-red-100 transition hover:bg-red-500/15"
+                    onClick={() => {
+                      setPowerMenuOpen(false);
+                      setPendingConfirm({
+                        title: "Shut down device",
+                        message:
+                          "Shut down this Raspberry Pi now? You will need to power it on manually.",
+                        confirmLabel: "Shut down",
+                        tone: "danger",
+                        action: () => shutdownDevice.mutate(),
+                      });
+                    }}
+                  >
+                    <Power size={16} className="text-red-300" />
+                    Shut down
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-zinc-200 transition hover:bg-white/[0.06]"
+                    onClick={() => {
+                      setPowerMenuOpen(false);
+                      setPendingConfirm({
+                        title: "Restart device",
+                        message: "Restart this Raspberry Pi now? Playback will stop during reboot.",
+                        confirmLabel: "Restart",
+                        tone: "danger",
+                        action: () => restartDevice.mutate(),
+                      });
+                    }}
+                  >
+                    <ArrowsClockwise size={16} className="text-zinc-400" />
+                    Restart device
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
           </div>
         </div>
       </section>
@@ -870,6 +957,7 @@ export function SettingsPage(): ReactElement {
           removeSource.isPending ||
           resetLibrary.isPending ||
           shutdownDevice.isPending ||
+          restartDevice.isPending ||
           restartApp.isPending ||
           updateApp.isPending
         }

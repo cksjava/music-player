@@ -11,7 +11,7 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { scanSource } from "./services/indexer.js";
 import { listMpvAudioDevices } from "./services/devices.js";
-import { ejectAudioCd, readAudioCdInfo } from "./services/cd.js";
+import { ejectAudioCd, readAudioCdInfo, resolvedCdRomDevice } from "./services/cd.js";
 import { clearErrorLogs, getErrorLogs, pushErrorLog } from "./services/error-log.js";
 import type { PlayerService } from "./services/player.js";
 import type { Album, Artist, Playlist, Source, Track } from "./types.js";
@@ -46,7 +46,7 @@ export function registerRoutes(
   };
   const scanJobs = new Map<string, ScanJob>();
   const runningBySource = new Map<string, string>();
-  const cdDevice = process.env.CDROM_DEVICE || "/dev/sr0";
+  const cdDevice = resolvedCdRomDevice();
   type UpdateJobStatus = "idle" | "running" | "ok" | "error";
   type UpdateJob = {
     status: UpdateJobStatus;
@@ -824,6 +824,22 @@ export function registerRoutes(
           "system",
           "device shutdown failed",
           `${msg}\nConfigure passwordless sudo for shutdown in /etc/sudoers.d/music-player`
+        );
+      }
+    }, 250);
+  });
+
+  app.post("/api/admin/system/restart-device", async (_req, res) => {
+    res.status(202).json({ ok: true, message: "Restart requested" });
+    setTimeout(async () => {
+      try {
+        await execFileAsync("sudo", ["-n", "shutdown", "-r", "now"]);
+      } catch (e) {
+        const msg = (e as Error).message;
+        pushErrorLog(
+          "system",
+          "device restart failed",
+          `${msg}\nConfigure passwordless sudo for shutdown -r in /etc/sudoers.d/music-player`
         );
       }
     }, 250);

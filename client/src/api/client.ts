@@ -246,6 +246,11 @@ export const musicApi = {
       method: "POST",
     }),
 
+  restartDevice: () =>
+    api<{ ok: boolean; message: string }>("/api/admin/system/restart-device", {
+      method: "POST",
+    }),
+
   restartApp: () =>
     api<{ ok: boolean; message: string }>("/api/admin/system/restart-app", {
       method: "POST",
