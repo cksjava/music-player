@@ -57,6 +57,9 @@ export function NowPage(): ReactElement {
 
   const playing = state?.status === "playing";
   const trackIdForPlaylist = state?.trackId ?? current?.id ?? null;
+  const isCdTrack = Boolean(
+    state?.trackId?.startsWith("cd:") || current?.id?.startsWith("cd:")
+  );
 
   const cycleRepeat = useCallback(() => {
     const r = state?.repeat ?? "off";
@@ -175,6 +178,12 @@ export function NowPage(): ReactElement {
                     alt={`${current.albumTitle ?? current.title} artwork`}
                     className="h-full w-full object-cover"
                     onError={() => setArtworkFailed(true)}
+                  />
+                ) : isCdTrack ? (
+                  <img
+                    src="/cd-scenery.jpg"
+                    alt="Audio CD artwork"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500/35 to-fuchsia-600/20 text-5xl font-black tracking-tight text-white">
