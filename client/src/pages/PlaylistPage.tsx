@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PencilSimple, Play, Trash } from "@phosphor-icons/react";
+import { PencilSimpleIcon, PlayIcon, TrashIcon } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
 import { TrackRow } from "../components/TrackRow";
@@ -95,7 +95,7 @@ export function PlaylistPage(): ReactElement {
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg transition hover:bg-violet-500"
                 aria-label="Play playlist"
               >
-                <Play weight="fill" size={20} />
+                <PlayIcon weight="fill" size={20} />
               </button>
             ) : null}
             <button
@@ -104,7 +104,7 @@ export function PlaylistPage(): ReactElement {
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-zinc-300 hover:bg-white/5 hover:text-white"
               aria-label="Rename"
             >
-              <PencilSimple size={20} />
+              <PencilSimpleIcon size={20} />
             </button>
             <button
               type="button"
@@ -114,7 +114,7 @@ export function PlaylistPage(): ReactElement {
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10"
               aria-label="Delete playlist"
             >
-              <Trash size={20} />
+              <TrashIcon size={20} />
             </button>
           </div>
         }

@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { X, MusicNotesPlus } from "@phosphor-icons/react";
+import { XIcon, MusicNotesPlusIcon } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { useToast } from "../context/ToastContext";
 
@@ -42,7 +42,7 @@ export function AddToPlaylistDialog(props: {
       >
         <div className="mb-3 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-zinc-300">
-            <MusicNotesPlus size={18} className="text-violet-400" />
+            <MusicNotesPlusIcon size={18} className="text-violet-400" />
             Add to playlist
           </h2>
           <button
@@ -51,7 +51,7 @@ export function AddToPlaylistDialog(props: {
             className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
             aria-label="Close add to playlist dialog"
           >
-            <X size={18} />
+            <XIcon size={18} />
           </button>
         </div>
         <p className="mb-3 truncate text-sm text-zinc-400">

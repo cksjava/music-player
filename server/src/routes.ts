@@ -10,6 +10,7 @@ import { promisify } from "node:util";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { scanSource } from "./services/indexer.js";
+import { importPlaylistFromDirectory } from "./services/playlist-import.js";
 import { dedupeAudioDevicesForUi, listMpvAudioDevices } from "./services/devices.js";
 import { ejectAudioCd, readAudioCdInfo, resolvedCdRomDevice } from "./services/cd.js";
 import { clearErrorLogs, getErrorLogs, pushErrorLog } from "./services/error-log.js";
@@ -641,7 +642,8 @@ export function registerRoutes(
   app.get("/api/sources", (_req, res) => {
     const rows = db
       .prepare(
-        `SELECT id, path, label, kind, enabled, created_at as createdAt, last_scan_at as lastScanAt FROM sources ORDER BY created_at DESC`
+        `SELECT id, path, label, kind, enabled, created_at as createdAt, last_scan_at as lastScanAt
+         FROM sources WHERE kind IN ('folder', 'cd') ORDER BY created_at DESC`
       )
       .all() as (Omit<Source, "enabled"> & { enabled: number })[];
     res.json({
@@ -990,6 +992,21 @@ export function registerRoutes(
       )
       .all() as (Playlist & { trackCount: number })[];
     res.json({ playlists: rows });
+  });
+
+  app.post("/api/playlists/import-folder", async (req, res) => {
+    const schema = z.object({ path: z.string().min(1) });
+    const body = schema.safeParse(req.body);
+    if (!body.success) return res.status(400).json({ error: body.error.flatten() });
+    try {
+      const result = await importPlaylistFromDirectory(db, body.data.path, { artworkDir });
+      res.status(201).json(result);
+    } catch (e) {
+      const msg = (e as Error).message;
+      pushErrorLog("library", "playlist folder import failed", msg);
+      const status = /not found|must be a directory|no flac/i.test(msg) ? 400 : 500;
+      res.status(status).json({ error: msg });
+    }
   });
 
   app.post("/api/playlists", (req, res) => {

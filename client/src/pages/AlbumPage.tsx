@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Disc, MusicNotesSimple, Play, Shuffle } from "@phosphor-icons/react";
+import { DiscIcon, MusicNotesSimpleIcon, PlayIcon, ShuffleIcon } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { AddToPlaylistDialog } from "../components/AddToPlaylistDialog";
 import { PageHeader } from "../components/PageHeader";
@@ -75,7 +75,7 @@ export function AlbumPage(): ReactElement {
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-900/40 transition hover:bg-violet-500 active:scale-95"
                 aria-label="Play album"
               >
-                <Play weight="fill" size={20} />
+                <PlayIcon weight="fill" size={20} />
               </button>
               <button
                 type="button"
@@ -83,7 +83,7 @@ export function AlbumPage(): ReactElement {
                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-200 transition hover:border-violet-500/40 hover:text-white active:scale-95"
                 aria-label="Shuffle album"
               >
-                <Shuffle size={20} />
+                <ShuffleIcon size={20} />
               </button>
             </div>
           ) : null
@@ -106,7 +106,7 @@ export function AlbumPage(): ReactElement {
                 ) : null}
                 {artworkFailed ? (
                   <div className="flex h-full w-full items-center justify-center text-violet-200">
-                    <Disc size={40} weight="duotone" />
+                    <DiscIcon size={40} weight="duotone" />
                   </div>
                 ) : null}
               </div>
@@ -135,7 +135,7 @@ export function AlbumPage(): ReactElement {
           </section>
 
           <section className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
-            <MusicNotesSimple size={16} className="text-violet-400" />
+            <MusicNotesSimpleIcon size={16} className="text-violet-400" />
             Track list
           </section>
           <ul className="space-y-1">

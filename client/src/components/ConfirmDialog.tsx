@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { X } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 
 type Tone = "default" | "danger";
@@ -42,7 +42,7 @@ export function ConfirmDialog(props: {
               className="rounded-xl p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white"
               aria-label="Close confirmation dialog"
             >
-              <X size={18} />
+              <XIcon size={18} />
             </button>
           </div>
           <p className="mb-4 text-sm text-zinc-400">{message}</p>

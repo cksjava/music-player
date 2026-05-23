@@ -2,21 +2,21 @@ import type { ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  List,
-  Pause,
-  Plus,
-  Play,
-  Repeat,
-  RepeatOnce,
-  Shuffle,
-  SkipBack,
-  SkipForward,
-  Minus,
-  SpeakerHigh,
-  MusicNotesPlus,
-  SpeakerSlash,
-  SpeakerX,
-  X,
+  ListIcon,
+  PauseIcon,
+  PlusIcon,
+  PlayIcon,
+  RepeatIcon,
+  RepeatOnceIcon,
+  ShuffleIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  MinusIcon,
+  SpeakerHighIcon,
+  MusicNotesPlusIcon,
+  SpeakerSlashIcon,
+  SpeakerXIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { AddToPlaylistDialog } from "../components/AddToPlaylistDialog";
@@ -99,10 +99,10 @@ export function NowPage(): ReactElement {
 
   const repeatIcon = useMemo(() => {
     if (state?.repeat === "one")
-      return <RepeatOnce size={22} weight="fill" className="text-violet-400" />;
+      return <RepeatOnceIcon size={22} weight="fill" className="text-violet-400" />;
     if (state?.repeat === "all")
-      return <Repeat size={22} weight="fill" className="text-violet-400" />;
-    return <Repeat size={22} />;
+      return <RepeatIcon size={22} weight="fill" className="text-violet-400" />;
+    return <RepeatIcon size={22} />;
   }, [state?.repeat]);
 
   return (
@@ -122,7 +122,7 @@ export function NowPage(): ReactElement {
           className="pointer-events-auto inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-zinc-900/80 px-3 py-2 text-zinc-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:border-fuchsia-500/30 hover:text-white"
           aria-label="Add current track to playlist"
         >
-          <MusicNotesPlus size={20} className="text-fuchsia-300" weight="bold" />
+          <MusicNotesPlusIcon size={20} className="text-fuchsia-300" weight="bold" />
           <span className="text-xs font-semibold text-zinc-200">Add</span>
         </button>
         <button
@@ -132,11 +132,11 @@ export function NowPage(): ReactElement {
           aria-label="Show volume controls"
         >
           {state?.muted ? (
-            <SpeakerX size={20} weight="fill" />
+            <SpeakerXIcon size={20} weight="fill" />
           ) : (state?.volume ?? 0) === 0 ? (
-            <SpeakerSlash size={20} />
+            <SpeakerSlashIcon size={20} />
           ) : (
-            <SpeakerHigh size={20} weight="fill" />
+            <SpeakerHighIcon size={20} weight="fill" />
           )}
           <span className="text-xs font-semibold tabular-nums text-zinc-400">
             {Math.round(state?.volume ?? 0)}
@@ -148,7 +148,7 @@ export function NowPage(): ReactElement {
           className="pointer-events-auto inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-zinc-900/80 px-3 py-2 text-zinc-300 shadow-lg shadow-black/30 backdrop-blur-xl transition hover:border-violet-500/30 hover:text-white"
           aria-label="Show queue"
         >
-          <List size={20} />
+          <ListIcon size={20} />
           <span className="text-xs font-semibold text-zinc-400">{queueIds.length}</span>
         </button>
         </div>
@@ -248,7 +248,7 @@ export function NowPage(): ReactElement {
           )}
           aria-label="Shuffle"
         >
-          <Shuffle size={24} weight={state?.shuffle ? "fill" : "regular"} />
+          <ShuffleIcon size={24} weight={state?.shuffle ? "fill" : "regular"} />
         </button>
         <button
           type="button"
@@ -256,7 +256,7 @@ export function NowPage(): ReactElement {
           className="rounded-full p-3 text-zinc-300 transition hover:bg-white/5 hover:text-white"
           aria-label="Previous"
         >
-          <SkipBack size={32} weight="fill" />
+          <SkipBackIcon size={32} weight="fill" />
         </button>
         <button
           type="button"
@@ -265,9 +265,9 @@ export function NowPage(): ReactElement {
           aria-label={playing ? "Pause" : "Play"}
         >
           {playing ? (
-            <Pause size={36} weight="fill" />
+            <PauseIcon size={36} weight="fill" />
           ) : (
-            <Play size={36} weight="fill" className="-ml-px" />
+            <PlayIcon size={36} weight="fill" className="-ml-px" />
           )}
         </button>
         <button
@@ -276,7 +276,7 @@ export function NowPage(): ReactElement {
           className="rounded-full p-3 text-zinc-300 transition hover:bg-white/5 hover:text-white"
           aria-label="Next"
         >
-          <SkipForward size={32} weight="fill" />
+          <SkipForwardIcon size={32} weight="fill" />
         </button>
         <button
           type="button"
@@ -305,7 +305,7 @@ export function NowPage(): ReactElement {
                 className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
                 aria-label="Close queue"
               >
-                <X size={20} />
+                <XIcon size={20} />
               </button>
             </div>
             <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-xl border border-white/[0.05] bg-black/20 p-2">
@@ -369,7 +369,7 @@ export function NowPage(): ReactElement {
                 className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
                 aria-label="Close volume controls"
               >
-                <X size={20} />
+                <XIcon size={20} />
               </button>
             </div>
             <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-zinc-900/50 px-3 py-2">
@@ -380,11 +380,11 @@ export function NowPage(): ReactElement {
                 aria-label={state?.muted ? "Unmute" : "Mute"}
               >
                 {state?.muted ? (
-                  <SpeakerX size={22} weight="fill" />
+                  <SpeakerXIcon size={22} weight="fill" />
                 ) : (state?.volume ?? 0) === 0 ? (
-                  <SpeakerSlash size={22} />
+                  <SpeakerSlashIcon size={22} />
                 ) : (
-                  <SpeakerHigh size={22} weight="fill" />
+                  <SpeakerHighIcon size={22} weight="fill" />
                 )}
               </button>
               <button
@@ -393,7 +393,7 @@ export function NowPage(): ReactElement {
                 className="rounded-lg p-1 text-zinc-400 hover:bg-white/5 hover:text-white"
                 aria-label="Decrease volume"
               >
-                <Minus size={18} weight="bold" />
+                <MinusIcon size={18} weight="bold" />
               </button>
               <input
                 type="range"
@@ -410,7 +410,7 @@ export function NowPage(): ReactElement {
                 className="rounded-lg p-1 text-zinc-400 hover:bg-white/5 hover:text-white"
                 aria-label="Increase volume"
               >
-                <Plus size={18} weight="bold" />
+                <PlusIcon size={18} weight="bold" />
               </button>
               <span className="w-10 text-right text-xs font-semibold tabular-nums text-zinc-500">
                 {Math.round(state?.volume ?? 0)}

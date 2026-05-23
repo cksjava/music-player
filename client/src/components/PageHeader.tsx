@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { CaretLeft } from "@phosphor-icons/react";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 import { BlitzLogo } from "./BlitzLogo";
 import { cn } from "../lib/cn";
 
@@ -31,7 +31,7 @@ export function PageHeader(props: {
               className="mt-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/5 hover:text-white sm:mt-2 sm:h-12 sm:w-12"
               aria-label="Back"
             >
-              <CaretLeft size={24} />
+              <CaretLeftIcon size={24} />
             </Link>
           ) : null}
         </div>

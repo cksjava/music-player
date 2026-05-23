@@ -2,7 +2,7 @@ import type { ReactElement, RefObject } from "react";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Disc, MagnifyingGlass, UsersThree } from "@phosphor-icons/react";
+import { DiscIcon, MagnifyingGlassIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
 import { cn } from "../lib/cn";
@@ -138,7 +138,7 @@ export function LibraryPage(): ReactElement {
             )}
             aria-label="Show albums"
           >
-            <Disc size={20} weight={tab === "albums" ? "fill" : "regular"} />
+            <DiscIcon size={20} weight={tab === "albums" ? "fill" : "regular"} />
           </button>
           <button
             type="button"
@@ -151,11 +151,11 @@ export function LibraryPage(): ReactElement {
             )}
             aria-label="Show artists"
           >
-            <UsersThree size={20} weight={tab === "artists" ? "fill" : "regular"} />
+            <UsersThreeIcon size={20} weight={tab === "artists" ? "fill" : "regular"} />
           </button>
         </div>
         <label className="flex min-h-[3rem] min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/[0.08] bg-zinc-900/60 px-4 py-3 shadow-inner ring-1 ring-black/20 focus-within:border-violet-500/40 focus-within:ring-violet-500/20">
-          <MagnifyingGlass className="shrink-0 text-zinc-500" size={22} />
+          <MagnifyingGlassIcon className="shrink-0 text-zinc-500" size={22} />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}

@@ -2,24 +2,26 @@ import type { ReactElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Broom,
-  ArrowsClockwise,
-  CaretDown,
-  DownloadSimple,
-  FolderOpen,
-  HardDrives,
-  Palette,
-  CaretUp,
-  Power,
-  PauseCircle,
-  Plus,
-  Moon,
-  SpeakerHigh,
-  Sun,
-  WarningCircle,
-  Trash,
-  X,
-  Scroll,
+  BroomIcon,
+  ArrowsClockwiseIcon,
+  CaretDownIcon,
+  DownloadSimpleIcon,
+  FolderOpenIcon,
+  HardDrivesIcon,
+  PaletteIcon,
+  CaretUpIcon,
+  PowerIcon,
+  PauseCircleIcon,
+  ListPlusIcon,
+  PlusIcon,
+  PlaylistIcon,
+  MoonIcon,
+  SpeakerHighIcon,
+  SunIcon,
+  WarningCircleIcon,
+  TrashIcon,
+  XIcon,
+  ScrollIcon,
 } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
@@ -95,6 +97,8 @@ export function SettingsPage(): ReactElement {
 
   const [path, setPath] = useState("");
   const [label, setLabel] = useState("");
+  const [playlistFolderPath, setPlaylistFolderPath] = useState("");
+  const [pickerTarget, setPickerTarget] = useState<"source" | "playlist">("source");
   const [showLogs, setShowLogs] = useState(false);
   const [showUpdateLog, setShowUpdateLog] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
@@ -153,6 +157,24 @@ export function SettingsPage(): ReactElement {
     updateLogQ.error,
     toast,
   ]);
+
+  const importPlaylistFolder = useMutation({
+    mutationFn: () => musicApi.importPlaylistFolder(playlistFolderPath.trim()),
+    onSuccess: async (r) => {
+      setPlaylistFolderPath("");
+      await qc.invalidateQueries({ queryKey: ["playlists"] });
+      await qc.invalidateQueries({ queryKey: ["albums"] });
+      await qc.invalidateQueries({ queryKey: ["artists"] });
+      await qc.invalidateQueries({ queryKey: ["tracks"] });
+      const errNote =
+        r.errors.length > 0 ? ` (${r.errors.length} file warnings)` : "";
+      toast(
+        `Playlist “${r.playlistName}” — ${r.trackCount} tracks indexed${errNote}`,
+        "info"
+      );
+    },
+    onError: (err: Error) => toast(err.message),
+  });
 
   const addSource = useMutation({
     mutationFn: () =>
@@ -310,7 +332,7 @@ export function SettingsPage(): ReactElement {
 
       <section className="mb-10">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
-          <Palette size={18} className="text-violet-400" />
+          <PaletteIcon size={18} className="text-violet-400" />
           Appearance
         </h2>
         <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-4">
@@ -355,7 +377,7 @@ export function SettingsPage(): ReactElement {
                     : "border-white/[0.08] bg-zinc-900/60 text-zinc-300 hover:border-violet-500/30 hover:text-white"
                 )}
               >
-                <Sun size={18} />
+                <SunIcon size={18} />
                 Light
               </button>
               <button
@@ -368,7 +390,7 @@ export function SettingsPage(): ReactElement {
                     : "border-white/[0.08] bg-zinc-900/60 text-zinc-300 hover:border-violet-500/30 hover:text-white"
                 )}
               >
-                <Moon size={18} />
+                <MoonIcon size={18} />
                 Dark
               </button>
             </div>
@@ -378,7 +400,7 @@ export function SettingsPage(): ReactElement {
 
       <section className="mb-10">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
-          <HardDrives size={18} className="text-violet-400" />
+          <HardDrivesIcon size={18} className="text-violet-400" />
           Audio output
         </h2>
         <p className="mb-3 text-sm leading-relaxed text-zinc-400">
@@ -387,7 +409,7 @@ export function SettingsPage(): ReactElement {
           then start or resume playback—sound switches immediately when possible.
         </p>
         <div className="relative flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-3 sm:p-4">
-          <SpeakerHigh
+          <SpeakerHighIcon
             size={22}
             className="mt-0.5 shrink-0 text-violet-400"
             weight="duotone"
@@ -445,7 +467,7 @@ export function SettingsPage(): ReactElement {
 
       <section className="mb-10">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
-          <FolderOpen size={18} className="text-fuchsia-400" />
+          <FolderOpenIcon size={18} className="text-fuchsia-400" />
           Music folders
         </h2>
         <form
@@ -465,12 +487,13 @@ export function SettingsPage(): ReactElement {
           <button
             type="button"
             onClick={() => {
+              setPickerTarget("source");
               setPickerPath(path.trim());
               setShowPicker(true);
             }}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-zinc-900/70 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-violet-500/30 hover:text-white"
           >
-            <FolderOpen size={18} />
+            <FolderOpenIcon size={18} />
             Browse folders
           </button>
           <input
@@ -484,7 +507,7 @@ export function SettingsPage(): ReactElement {
             disabled={addSource.isPending || !path.trim()}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-900/25 transition hover:opacity-95 disabled:opacity-40"
           >
-            <Plus size={20} weight="bold" />
+            <PlusIcon size={20} weight="bold" />
             Add folder source
           </button>
         </form>
@@ -511,7 +534,7 @@ export function SettingsPage(): ReactElement {
                   disabled={!s.enabled || scan.isPending}
                   className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:border-violet-500/30 hover:text-white disabled:opacity-40"
                 >
-                  <ArrowsClockwise
+                  <ArrowsClockwiseIcon
                     size={18}
                     className={scan.isPending ? "animate-spin" : ""}
                   />
@@ -545,7 +568,7 @@ export function SettingsPage(): ReactElement {
                   className="inline-flex items-center justify-center rounded-xl border border-red-500/20 p-2 text-red-400 hover:bg-red-500/10"
                   aria-label="Delete source"
                 >
-                  <Trash size={20} />
+                  <TrashIcon size={20} />
                 </button>
               </div>
             </li>
@@ -555,7 +578,54 @@ export function SettingsPage(): ReactElement {
 
       <section className="mb-10">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
-          <Broom size={18} className="text-amber-400" />
+          <PlaylistIcon size={18} className="text-fuchsia-400" />
+          Playlist folders
+        </h2>
+        <p className="mb-3 text-sm leading-relaxed text-zinc-400">
+          Pick a folder of FLAC files. Tracks are indexed into the library (album and artist from
+          file tags) and added to a playlist named after the folder. Re-importing the same path
+          refreshes the playlist order.
+        </p>
+        <form
+          className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!playlistFolderPath.trim()) return;
+            importPlaylistFolder.mutate();
+          }}
+        >
+          <input
+            value={playlistFolderPath}
+            onChange={(e) => setPlaylistFolderPath(e.target.value)}
+            placeholder="/path/to/my-playlist-folder"
+            className="w-full rounded-xl border border-white/[0.08] bg-zinc-950/60 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-fuchsia-500/40"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setPickerTarget("playlist");
+              setPickerPath(playlistFolderPath.trim());
+              setShowPicker(true);
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-zinc-900/70 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-violet-500/30 hover:text-white"
+          >
+            <FolderOpenIcon size={18} />
+            Browse folders
+          </button>
+          <button
+            type="submit"
+            disabled={importPlaylistFolder.isPending || !playlistFolderPath.trim()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 py-3 text-sm font-bold text-white shadow-lg shadow-fuchsia-900/25 transition hover:opacity-95 disabled:opacity-40"
+          >
+            <ListPlusIcon size={20} weight="bold" />
+            Import as playlist
+          </button>
+        </form>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
+          <BroomIcon size={18} className="text-amber-400" />
           Maintenance
         </h2>
         <div className="rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-2.5">
@@ -569,7 +639,7 @@ export function SettingsPage(): ReactElement {
             }
             className="flex w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 py-2.5 text-left text-[13px] font-medium text-zinc-200 transition hover:border-violet-500/30 hover:text-white"
           >
-            <PauseCircle size={18} className="text-violet-300" />
+            <PauseCircleIcon size={18} className="text-violet-300" />
             <span>Stop Playback</span>
           </button>
           <button
@@ -577,7 +647,7 @@ export function SettingsPage(): ReactElement {
             onClick={() => setShowLogs(true)}
             className="flex w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 py-2.5 text-left text-[13px] font-medium text-zinc-200 transition hover:border-rose-500/30 hover:text-white"
           >
-            <WarningCircle size={18} className="text-rose-300" />
+            <WarningCircleIcon size={18} className="text-rose-300" />
             <span>Error Logs</span>
           </button>
           <button
@@ -585,7 +655,7 @@ export function SettingsPage(): ReactElement {
             onClick={() => setShowUpdateLog(true)}
             className="col-span-2 flex w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 py-2.5 text-left text-[13px] font-medium text-zinc-200 transition hover:border-indigo-500/30 hover:text-white"
           >
-            <Scroll size={18} className="text-indigo-300" />
+            <ScrollIcon size={18} className="text-indigo-300" />
             <span>Update process log</span>
           </button>
           <button
@@ -601,7 +671,7 @@ export function SettingsPage(): ReactElement {
             disabled={restartApp.isPending}
             className="flex w-full items-center gap-2 rounded-lg border border-sky-500/25 bg-sky-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-sky-100 transition hover:bg-sky-500/15 disabled:opacity-50"
           >
-            <ArrowsClockwise size={17} className="text-sky-300" />
+            <ArrowsClockwiseIcon size={17} className="text-sky-300" />
             <span>Restart App</span>
           </button>
           <button
@@ -618,7 +688,7 @@ export function SettingsPage(): ReactElement {
             disabled={updateApp.isPending}
             className="flex w-full items-center gap-2 rounded-lg border border-indigo-500/25 bg-indigo-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-indigo-100 transition hover:bg-indigo-500/15 disabled:opacity-50"
           >
-            <DownloadSimple size={17} className="text-indigo-300" />
+            <DownloadSimpleIcon size={17} className="text-indigo-300" />
             <span>Update App</span>
           </button>
           <div className="col-span-2 rounded-lg border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-[11px] text-indigo-100/90">
@@ -669,7 +739,7 @@ export function SettingsPage(): ReactElement {
             }}
             className="flex w-full items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2.5 text-left text-[13px] font-medium text-amber-100 transition hover:bg-amber-500/15"
           >
-            <Broom size={17} className="text-amber-300" />
+            <BroomIcon size={17} className="text-amber-300" />
             <span>Clean Library</span>
           </button>
           <div
@@ -695,7 +765,7 @@ export function SettingsPage(): ReactElement {
               disabled={shutdownDevice.isPending || restartDevice.isPending}
               className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 text-left text-[13px] font-medium text-red-100 transition hover:bg-red-500/15 disabled:pointer-events-none"
             >
-              <Power size={17} className="shrink-0 text-red-300" />
+              <PowerIcon size={17} className="shrink-0 text-red-300" />
               <span className="truncate">Shut down</span>
             </button>
             <div className="relative shrink-0 self-stretch border-l border-red-500/25">
@@ -708,7 +778,7 @@ export function SettingsPage(): ReactElement {
                 disabled={shutdownDevice.isPending || restartDevice.isPending}
                 className="flex h-full items-center px-2.5 text-red-200 transition hover:bg-red-500/15 disabled:pointer-events-none"
               >
-                <CaretDown size={16} weight="bold" className="text-red-300" />
+                <CaretDownIcon size={16} weight="bold" className="text-red-300" />
               </button>
               {powerMenuOpen ? (
                 <div
@@ -731,7 +801,7 @@ export function SettingsPage(): ReactElement {
                       });
                     }}
                   >
-                    <Power size={16} className="text-red-300" />
+                    <PowerIcon size={16} className="text-red-300" />
                     Shut down
                   </button>
                   <button
@@ -749,7 +819,7 @@ export function SettingsPage(): ReactElement {
                       });
                     }}
                   >
-                    <ArrowsClockwise size={16} className="text-zinc-400" />
+                    <ArrowsClockwiseIcon size={16} className="text-zinc-400" />
                     Restart device
                   </button>
                 </div>
@@ -771,7 +841,7 @@ export function SettingsPage(): ReactElement {
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-zinc-300">
-                <WarningCircle size={18} className="text-rose-400" />
+                <WarningCircleIcon size={18} className="text-rose-400" />
                 Error logs
               </h2>
               <div className="flex items-center gap-2">
@@ -789,7 +859,7 @@ export function SettingsPage(): ReactElement {
                   className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
                   aria-label="Close error logs"
                 >
-                  <X size={18} />
+                  <XIcon size={18} />
                 </button>
               </div>
             </div>
@@ -842,7 +912,7 @@ export function SettingsPage(): ReactElement {
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-zinc-300">
-                <Scroll size={18} className="text-indigo-400" />
+                <ScrollIcon size={18} className="text-indigo-400" />
                 Update process log
               </h2>
               <div className="flex items-center gap-2">
@@ -860,7 +930,7 @@ export function SettingsPage(): ReactElement {
                   className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
                   aria-label="Close update log"
                 >
-                  <X size={18} />
+                  <XIcon size={18} />
                 </button>
               </div>
             </div>
@@ -899,8 +969,8 @@ export function SettingsPage(): ReactElement {
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-zinc-300">
-                <FolderOpen size={18} className="text-fuchsia-400" />
-                Select source folder
+                <FolderOpenIcon size={18} className="text-fuchsia-400" />
+                {pickerTarget === "playlist" ? "Select playlist folder" : "Select source folder"}
               </h2>
               <button
                 type="button"
@@ -908,7 +978,7 @@ export function SettingsPage(): ReactElement {
                 className="rounded-xl p-2 text-zinc-400 hover:bg-white/5 hover:text-white"
                 aria-label="Close folder picker"
               >
-                <X size={18} />
+                <XIcon size={18} />
               </button>
             </div>
 
@@ -927,17 +997,21 @@ export function SettingsPage(): ReactElement {
                 }}
                 className="inline-flex items-center gap-1 rounded-lg border border-white/[0.1] bg-zinc-800/70 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:text-white disabled:opacity-40"
               >
-                <CaretUp size={14} />
+                <CaretUpIcon size={14} />
                 Up
               </button>
               <button
                 type="button"
                 onClick={() => {
                   if (pickerQ.data?.current) {
-                    setPath(pickerQ.data.current);
-                    if (!label.trim()) {
-                      const parts = pickerQ.data.current.split("/").filter(Boolean);
-                      setLabel(parts[parts.length - 1] ?? "");
+                    if (pickerTarget === "playlist") {
+                      setPlaylistFolderPath(pickerQ.data.current);
+                    } else {
+                      setPath(pickerQ.data.current);
+                      if (!label.trim()) {
+                        const parts = pickerQ.data.current.split("/").filter(Boolean);
+                        setLabel(parts[parts.length - 1] ?? "");
+                      }
                     }
                     setShowPicker(false);
                   }
@@ -959,7 +1033,7 @@ export function SettingsPage(): ReactElement {
                       onClick={() => setPickerPath(d.path)}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-zinc-300 transition hover:bg-white/5 hover:text-white"
                     >
-                      <FolderOpen size={16} className="text-fuchsia-400" />
+                      <FolderOpenIcon size={16} className="text-fuchsia-400" />
                       <span className="truncate">{d.name}</span>
                     </button>
                   </li>
@@ -983,6 +1057,7 @@ export function SettingsPage(): ReactElement {
         tone={pendingConfirm?.tone ?? "default"}
         busy={
           addSource.isPending ||
+          importPlaylistFolder.isPending ||
           scan.isPending ||
           toggleSource.isPending ||
           removeSource.isPending ||

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Disc, EjectSimple, Stop, Play } from "@phosphor-icons/react";
+import { DiscIcon, EjectSimpleIcon, StopIcon, PlayIcon } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
@@ -62,7 +62,7 @@ export function AudioCdPage(): ReactElement {
       <div className="mb-5 rounded-2xl border border-white/[0.06] bg-zinc-900/55 p-4">
         <div className="mb-4 flex items-center gap-3 text-zinc-300">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
-            <Disc size={24} />
+            <DiscIcon size={24} />
           </div>
           <div>
             <p className="text-sm font-semibold text-white">
@@ -80,7 +80,7 @@ export function AudioCdPage(): ReactElement {
             disabled={actions.pending || !cdQ.data?.present}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isCdPlaying ? <Stop size={20} weight="fill" /> : <Play size={20} weight="fill" />}
+            {isCdPlaying ? <StopIcon size={20} weight="fill" /> : <PlayIcon size={20} weight="fill" />}
             {isCdPlaying ? "Stop" : "Play"}
           </button>
           <button
@@ -89,7 +89,7 @@ export function AudioCdPage(): ReactElement {
             disabled={actions.pending || !cdQ.data?.present}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.12] bg-zinc-800/70 px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:bg-zinc-700/70 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <EjectSimple size={20} weight="fill" />
+            <EjectSimpleIcon size={20} weight="fill" />
             Eject
           </button>
         </div>

@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Play, Disc } from "@phosphor-icons/react";
+import { PlayIcon, DiscIcon } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
 import { TrackRow } from "../components/TrackRow";
@@ -52,7 +52,7 @@ export function ArtistPage(): ReactElement {
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-900/40 transition hover:bg-violet-500 active:scale-95"
               aria-label="Play all"
             >
-              <Play weight="fill" size={20} />
+              <PlayIcon weight="fill" size={20} />
             </button>
           ) : null
         }
@@ -70,7 +70,7 @@ export function ArtistPage(): ReactElement {
                   className="flex w-36 flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900/60 transition hover:border-violet-500/30"
                 >
                   <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-indigo-600/30 to-violet-800/20">
-                    <Disc className="text-white/40" size={36} weight="duotone" />
+                    <DiscIcon className="text-white/40" size={36} weight="duotone" />
                   </div>
                   <p className="truncate px-2 py-2 text-xs font-medium text-zinc-200">{a.title}</p>
                 </Link>

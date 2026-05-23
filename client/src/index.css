@@ -13,6 +13,7 @@
 @import "@fontsource/open-sans/700.css";
 @import "@fontsource/lato/400.css";
 @import "@fontsource/lato/700.css";
+@import "wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.css";
 
 @font-face {
   font-family: "Metropolis";
@@ -93,6 +94,13 @@ html[data-theme="neon"] {
   --theme-radius-lg: 0.32rem;
   --theme-radius-xl: 0.42rem;
   --theme-radius-2xl: 0.54rem;
+}
+
+html[data-theme="wanted"] {
+  --theme-radius-md: 0.25rem;
+  --theme-radius-lg: 0.35rem;
+  --theme-radius-xl: 0.47rem;
+  --theme-radius-2xl: 0.6rem;
 }
 
 html[data-mode="light"] {
@@ -336,6 +344,34 @@ html[data-theme="neon"][data-mode="light"] {
   --color-fuchsia-600: #155e75;
   --color-indigo-400: #0369a1;
   --color-indigo-500: #075985;
+}
+
+html[data-theme="wanted"][data-mode="dark"] {
+  --theme-font-sans: "Wanted Sans Variable", "Wanted Sans";
+  --selection-color: rgb(58 104 251 / 0.30);
+  --now-gradient-a: rgb(58 104 251 / 0.32);
+  --now-gradient-b: rgb(99 102 241 / 0.22);
+  --color-violet-400: #6b8cff;
+  --color-violet-500: #3a68fb;
+  --color-violet-600: #2952d9;
+  --color-fuchsia-500: #6366f1;
+  --color-fuchsia-600: #4f46e5;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+}
+
+html[data-theme="wanted"][data-mode="light"] {
+  --theme-font-sans: "Wanted Sans Variable", "Wanted Sans";
+  --selection-color: rgb(30 58 138 / 0.18);
+  --now-gradient-a: rgb(41 82 217 / 0.22);
+  --now-gradient-b: rgb(67 56 202 / 0.16);
+  --color-violet-400: #2952d9;
+  --color-violet-500: #1e40af;
+  --color-violet-600: #1e3a8a;
+  --color-fuchsia-500: #4338ca;
+  --color-fuchsia-600: #3730a3;
+  --color-indigo-400: #4f46e5;
+  --color-indigo-500: #4338ca;
 }
 
 @layer base {

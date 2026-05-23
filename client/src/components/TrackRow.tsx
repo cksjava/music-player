@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { MusicNotesPlus, Play, Trash } from "@phosphor-icons/react";
+import { MusicNotesPlusIcon, PlayIcon, TrashIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 import { formatMs } from "../lib/format";
 import type { Track } from "../types";
@@ -67,7 +67,7 @@ export function TrackRow(props: {
             className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-400"
             aria-label="Remove"
           >
-            <Trash size={20} />
+            <TrashIcon size={20} />
           </button>
         ) : null}
         {onAddToPlaylist ? (
@@ -80,7 +80,7 @@ export function TrackRow(props: {
             className="rounded-lg p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
             aria-label="Add to playlist"
           >
-            <MusicNotesPlus size={21} />
+            <MusicNotesPlusIcon size={21} />
           </button>
         ) : null}
         <button
@@ -92,7 +92,7 @@ export function TrackRow(props: {
           className="rounded-lg p-2 text-violet-400 hover:bg-violet-500/15"
           aria-label="Play"
         >
-          <Play size={22} weight="fill" />
+          <PlayIcon size={22} weight="fill" />
         </button>
       </div>
       ) : null}

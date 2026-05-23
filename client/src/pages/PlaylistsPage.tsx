@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Playlist, Plus } from "@phosphor-icons/react";
+import { PlaylistIcon, PlusIcon } from "@phosphor-icons/react";
 import { musicApi } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
 import { useToast } from "../context/ToastContext";
@@ -53,7 +53,7 @@ export function PlaylistsPage(): ReactElement {
           disabled={create.isPending || !name.trim()}
           className="flex shrink-0 items-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:bg-violet-500 disabled:opacity-40"
         >
-          <Plus size={20} weight="bold" />
+          <PlusIcon size={20} weight="bold" />
           Create
         </button>
       </form>
@@ -65,7 +65,7 @@ export function PlaylistsPage(): ReactElement {
               className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-zinc-900/50 px-4 py-3.5 transition hover:border-violet-500/25 hover:bg-zinc-900"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-600/25 to-violet-600/25 text-violet-300 ring-1 ring-white/10">
-                <Playlist size={24} weight="duotone" />
+                <PlaylistIcon size={24} weight="duotone" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-white">{p.name}</p>

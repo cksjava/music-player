@@ -9,7 +9,7 @@ import {
 } from "react";
 
 export type ThemeMode = "light" | "dark";
-export type ThemeId = "aurora" | "ocean" | "sunset" | "forest" | "neon";
+export type ThemeId = "aurora" | "ocean" | "sunset" | "forest" | "neon" | "wanted";
 
 export type ThemeOption = {
   id: ThemeId;
@@ -23,6 +23,7 @@ const THEME_OPTIONS: ThemeOption[] = [
   { id: "sunset", label: "Sunset", fontLabel: "Poppins" },
   { id: "forest", label: "Forest", fontLabel: "Open Sans" },
   { id: "neon", label: "Neon", fontLabel: "Inter" },
+  { id: "wanted", label: "Wanted", fontLabel: "Wanted Sans" },
 ];
 
 const STORAGE_THEME_KEY = "music-player.theme";

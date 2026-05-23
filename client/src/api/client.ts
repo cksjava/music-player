@@ -274,6 +274,20 @@ export const musicApi = {
 
   playlists: () => api<{ playlists: Playlist[] }>("/api/playlists"),
 
+  importPlaylistFolder: (path: string) =>
+    api<{
+      playlistId: string;
+      playlistName: string;
+      albumId: string;
+      trackCount: number;
+      added: number;
+      updated: number;
+      errors: string[];
+    }>("/api/playlists/import-folder", {
+      method: "POST",
+      body: JSON.stringify({ path }),
+    }),
+
   createPlaylist: (name: string) =>
     api<Playlist>("/api/playlists", {
       method: "POST",

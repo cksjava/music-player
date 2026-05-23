@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { X } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 
 type Toast = { id: number; message: string; kind: "error" | "info" };
@@ -54,7 +54,7 @@ export function ToastProvider({ children }: { children: ReactNode }): React.Reac
               className="shrink-0 rounded-lg p-1 text-current opacity-70 hover:opacity-100"
               aria-label="Dismiss"
             >
-              <X size={20} />
+              <XIcon size={20} />
             </button>
           </div>
         ))}

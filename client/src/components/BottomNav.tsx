@@ -1,14 +1,14 @@
 import type { ReactElement } from "react";
 import { NavLink } from "react-router-dom";
-import { Disc, GearSix, MusicNotes, Playlist } from "@phosphor-icons/react";
+import { DiscIcon, GearSixIcon, MusicNotesIcon, PlaylistIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 
 const items = [
-  { to: "/library", label: "Library", Icon: Disc },
-  { to: "/playlists", label: "Playlists", Icon: Playlist },
-  { to: "/cd", label: "CD", Icon: Disc },
-  { to: "/now", label: "Now", Icon: MusicNotes },
-  { to: "/settings", label: "System", Icon: GearSix },
+  { to: "/library", label: "Library", Icon: DiscIcon },
+  { to: "/playlists", label: "Playlists", Icon: PlaylistIcon },
+  { to: "/cd", label: "CD", Icon: DiscIcon },
+  { to: "/now", label: "Now", Icon: MusicNotesIcon },
+  { to: "/settings", label: "System", Icon: GearSixIcon },
 ] as const;
 
 export function BottomNav(): ReactElement {

@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Pause, Play, SkipForward } from "@phosphor-icons/react";
+import { PauseIcon, PlayIcon, SkipForwardIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 import { formatMs } from "../lib/format";
 import { usePlayerActions, usePlayerState } from "../hooks/usePlayer";
@@ -63,9 +63,9 @@ export function MiniPlayer(): ReactElement | null {
             aria-label={playing ? "Pause" : "Play"}
           >
             {playing ? (
-              <Pause weight="fill" size={22} />
+              <PauseIcon weight="fill" size={22} />
             ) : (
-              <Play weight="fill" size={22} />
+              <PlayIcon weight="fill" size={22} />
             )}
           </button>
           <button
@@ -77,7 +77,7 @@ export function MiniPlayer(): ReactElement | null {
             className="flex h-10 w-10 items-center justify-center rounded-full text-zinc-300 transition hover:bg-white/5 hover:text-white active:scale-95"
             aria-label="Next track"
           >
-            <SkipForward size={22} />
+            <SkipForwardIcon size={22} />
           </button>
         </div>
       </Link>

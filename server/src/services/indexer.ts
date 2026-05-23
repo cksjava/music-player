@@ -49,7 +49,7 @@ function sortKey(name: string): string {
   return name.trim().toLowerCase();
 }
 
-function splitArtists(...values: Array<string | string[] | undefined>): string[] {
+export function splitArtists(...values: Array<string | string[] | undefined>): string[] {
   const raw: string[] = [];
   for (const value of values) {
     if (!value) continue;
@@ -73,7 +73,7 @@ function splitArtists(...values: Array<string | string[] | undefined>): string[]
   return out;
 }
 
-function parseFilenameFallback(
+export function parseFilenameFallback(
   filename: string
 ): { title?: string; artist?: string; trackNumber?: number } {
   const base = basename(filename, extname(filename));
@@ -387,7 +387,7 @@ export async function scanSource(
   return result;
 }
 
-function stableArtKey(input: string): string {
+export function stableArtKey(input: string): string {
   return (
     input
       .toLowerCase()
@@ -397,7 +397,7 @@ function stableArtKey(input: string): string {
   );
 }
 
-function guessArtworkExtension(format: string | undefined): string {
+export function guessArtworkExtension(format: string | undefined): string {
   const f = (format ?? "").toLowerCase();
   if (f.includes("png")) return "png";
   if (f.includes("webp")) return "webp";

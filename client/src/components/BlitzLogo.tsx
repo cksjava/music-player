@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Link } from "react-router-dom";
-import { Lightning } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/cn";
 
 const SIZE_STYLES = {
@@ -36,7 +36,7 @@ export function BlitzLogo(props: BlitzLogoProps): ReactElement {
         )}
         aria-hidden
       >
-        <Lightning
+        <LightningIcon
           size={sz.icon}
           weight="fill"
           className="text-violet-300 drop-shadow-[0_0_10px_rgba(167,139,250,0.35)]"
